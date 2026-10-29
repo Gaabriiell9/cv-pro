@@ -2,12 +2,13 @@ import { html, paragraphs } from "@/lib/resume/html";
 import { sectionTitle, UI_LABELS } from "@/lib/resume/labels";
 import type { Section } from "@/lib/resume/schema";
 import type { TemplateDef, TemplateInput } from "../types";
-import { contactItems, formatPeriod, fullName, joinWith, photoTag } from "../shared";
+import { contactItems, filledItems, formatPeriod, fullName, joinWith, photoTag } from "../shared";
 
 // « Classique » : une colonne, sobre, pensé d'abord pour les logiciels de recrutement.
 
-function section(input: TemplateInput, s: Section) {
+function section(input: TemplateInput, raw: Section) {
   const { locale } = input;
+  const s = { ...raw, items: filledItems(raw.items as { id: string }[]) } as Section;
   if (!s.visible || s.items.length === 0) return html``;
   const title = html`<h2 class="sec-title">${sectionTitle(locale, s.type, s.title)}</h2>`;
 

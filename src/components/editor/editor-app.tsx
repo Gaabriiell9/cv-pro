@@ -1,0 +1,207 @@
+"use client";
+
+import { Download, Eye, Loader2, Palette, PenLine } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+import { ResumePreview } from "@/components/resume-preview";
+import { useDebounced, useEditorHydration, useRenderRequest } from "@/lib/editor/hooks";
+import { useEditor } from "@/lib/editor/store";
+import { downloadResumePdf } from "@/lib/resume/download";
+import { renderRequestSchema, type ResumeContent } from "@/lib/resume/schema";
+import { BasicsForm } from "./basics-form";
+import { DesignPanel } from "./design-panel";
+import { SectionsEditor } from "./sections-editor";
+
+type Tab = "contenu" | "design" | "apercu";
+
+function isEmpty(c: ResumeContent): boolean {
+  const b = c.basics;
+  if (b.firstName || b.lastName || b.jobTitle || c.summary) return false;
+  return c.sections.every((s) => (s.items as Record<string, unknown>[]).every((it) => Object.entries(it).every(([k, v]) => k === "id" || k === "level" || !v)));
+}
+
+function DownloadButton({ compact }: { compact?: boolean }) {
+  const request = useRenderRequest();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function onClick() {
+    setError(null);
+    const parsed = renderRequestSchema.safeParse(request);
+    if (!parsed.success) return setError("Un champ dépasse la longueur autorisée.");
+    setBusy(true);
+    const err = await downloadResumePdf(parsed.data);
+    setBusy(false);
+    setError(err);
+  }
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={busy}
+        className={`inline-flex h-11 items-center gap-2 rounded-full bg-accent font-semibold text-accent-ink transition-opacity disabled:opacity-70 ${compact ? "px-4 text-sm" : "px-5"}`}
+      >
+        {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Download className="size-4" aria-hidden />}
+        {busy ? "Préparation..." : compact ? "PDF" : "Télécharger le PDF"}
+      </button>
+      {error ? (
+        <p role="alert" className="absolute right-0 top-full z-20 mt-2 w-64 rounded-xl bg-red-50 p-3 text-sm text-red-900 shadow-lg">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function Preview() {
+  const request = useDebounced(useRenderRequest());
+  const empty = isEmpty(request.content);
+  return (
+    <div className="relative">
+      <ResumePreview request={request} label="Aperçu de votre CV" />
+      {empty ? (
+        <div className="pointer-events-none absolute inset-x-6 top-16 rounded-xl bg-paper/95 p-4 text-center text-sm text-ink-soft shadow-sm">
+          Votre CV apparaîtra ici au fur et à mesure de la saisie.
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function ResetButton() {
+  const reset = useEditor((s) => s.reset);
+  const [confirm, setConfirm] = useState(false);
+  if (!confirm)
+    return (
+      <button type="button" onClick={() => setConfirm(true)} className="mx-auto h-10 rounded-lg px-3 text-sm text-ink-soft hover:bg-paper-2 hover:text-red-800">
+        Tout effacer et recommencer
+      </button>
+    );
+  return (
+    <div role="alertdialog" aria-label="Confirmer l'effacement" className="flex flex-wrap items-center gap-2 rounded-xl bg-red-50 p-3 text-sm">
+      <span className="flex-1">Effacer tout le CV de cet appareil ? C&apos;est définitif.</span>
+      <button type="button" onClick={() => setConfirm(false)} className="h-10 rounded-lg px-3 font-medium hover:bg-white">
+        Annuler
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          reset();
+          setConfirm(false);
+          window.scrollTo({ top: 0 });
+        }}
+        className="h-10 rounded-lg bg-red-800 px-3 font-medium text-white"
+      >
+        Effacer
+      </button>
+    </div>
+  );
+}
+
+const TABS: { id: Tab; label: string; icon: typeof PenLine; mobileOnly?: boolean }[] = [
+  { id: "contenu", label: "Contenu", icon: PenLine },
+  { id: "design", label: "Design", icon: Palette },
+  { id: "apercu", label: "Aperçu", icon: Eye, mobileOnly: true },
+];
+
+export function EditorApp() {
+  const ready = useEditorHydration();
+  const [tab, setTab] = useState<Tab>("contenu");
+  // Sur ordinateur l'aperçu est toujours visible : l'onglet « Aperçu » ramène au contenu.
+  const desktopTab: Tab = tab === "apercu" ? "contenu" : tab;
+
+  function go(next: Tab) {
+    setTab(next);
+    window.scrollTo({ top: 0 });
+  }
+
+  if (!ready) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center text-ink-soft">
+        <Loader2 className="size-5 animate-spin" aria-label="Chargement de votre brouillon" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-dvh pb-24 lg:pb-0">
+      <header className="sticky top-0 z-30 border-b border-line bg-paper/90 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
+          <Link href="/" className="font-display text-xl font-semibold tracking-tight">
+            CV Pro
+          </Link>
+          <p className="hidden text-xs text-ink-soft sm:block">Enregistré automatiquement sur cet appareil</p>
+          <div className="lg:hidden">
+            <DownloadButton compact />
+          </div>
+          <div className="hidden lg:block">
+            <DownloadButton />
+          </div>
+        </div>
+      </header>
+
+      <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)] gap-8 px-4 pt-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:pt-6 xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+        <div className="min-w-0">
+          {/* Onglets ordinateur */}
+          <div role="tablist" aria-label="Partie de l'éditeur" className="mb-4 hidden gap-1 rounded-full bg-paper-2 p-1 lg:inline-flex">
+            {TABS.filter((t) => !t.mobileOnly).map((t) => (
+              <button
+                key={t.id}
+                role="tab"
+                type="button"
+                aria-selected={desktopTab === t.id}
+                onClick={() => setTab(t.id)}
+                className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-medium ${desktopTab === t.id ? "bg-white shadow-sm" : "text-ink-soft"}`}
+              >
+                <t.icon className="size-4" aria-hidden />
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          <div className={`grid grid-cols-1 gap-3 ${tab === "contenu" ? "" : "hidden"} ${desktopTab === "contenu" ? "lg:grid" : "lg:hidden"}`}>
+            <BasicsForm />
+            <SectionsEditor />
+            <ResetButton />
+          </div>
+          <div className={`${tab === "design" ? "" : "hidden"} ${desktopTab === "design" ? "lg:block" : "lg:hidden"}`}>
+            <DesignPanel />
+          </div>
+          <div className={`${tab === "apercu" ? "" : "hidden"} lg:hidden`}>
+            {tab === "apercu" ? <Preview /> : null}
+          </div>
+        </div>
+
+        {/* Aperçu permanent sur ordinateur */}
+        <aside className="hidden lg:block" aria-label="Aperçu">
+          <div className="sticky top-20 max-h-[calc(100dvh-6rem)] overflow-y-auto pb-6">
+            <Preview />
+          </div>
+        </aside>
+      </div>
+
+      {/* Onglets téléphone */}
+      <nav
+        aria-label="Partie de l'éditeur"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-paper/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+      >
+        <div className="mx-auto grid max-w-md grid-cols-3">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => go(t.id)}
+              aria-current={tab === t.id ? "page" : undefined}
+              className={`flex h-16 flex-col items-center justify-center gap-1 text-xs font-medium ${tab === t.id ? "text-accent" : "text-ink-soft"}`}
+            >
+              <t.icon className="size-5" aria-hidden />
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </nav>
+    </div>
+  );
+}

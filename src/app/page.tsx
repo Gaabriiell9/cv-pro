@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 // Page d'accueil provisoire (avant lancement). Le CV affiché est un exemple fictif.
 
 export default function Home() {
@@ -6,7 +8,7 @@ export default function Home() {
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-5 sm:px-6">
         <span className="font-display text-xl font-semibold tracking-tight">CV Pro</span>
         <span className="rounded-full border border-line px-3 py-1 text-xs text-ink-soft">
-          Bientôt disponible
+          Version de test
         </span>
       </header>
 
@@ -19,6 +21,12 @@ export default function Home() {
             Sans inscription, sur téléphone comme sur ordinateur. Le gratuit est vraiment gratuit,
             et le payant n&apos;est jamais un abonnement caché.
           </p>
+          <Link
+            href="/editeur"
+            className="mt-8 inline-flex h-12 items-center rounded-full bg-accent px-6 font-semibold text-accent-ink transition-opacity hover:opacity-90"
+          >
+            Créer mon CV
+          </Link>
           <ul className="mt-8 space-y-2 text-sm text-ink-soft">
             <li>Des designs variés, à changer en un clic</li>
             <li>Un PDF A4 lisible par les logiciels de recrutement</li>

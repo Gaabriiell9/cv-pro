@@ -73,6 +73,9 @@ Projet de GF Web (Gabriel), indépendant de QuickDevis.
 ## Interface
 
 - Mobile d'abord. Vérifier chaque écran avec de vraies captures Playwright (téléphone et ordinateur) avant de dire que c'est fini.
+- Débordement horizontal : tester avec `isMobile: true` et comparer `innerWidth` à la largeur de l'écran (`visualViewport.width`), pas seulement `scrollWidth > innerWidth` (sur mobile la mise en page s'élargit et le test naïf ne voit rien).
+- Grilles : toujours `grid-cols-1` (ou `grid-cols-[minmax(0,1fr)]`), jamais `grid` seul : une colonne implicite grandit avec la largeur minimale des champs. Les `<input>` ont `min-w-0`, et tout élément `truncate` dans un flex a un parent `min-w-0`.
+- Designs : les éléments vides et les sections sans contenu ne s'affichent pas (`filledItems` dans `src/templates/shared.ts`).
 - Direction « papeterie » : fond papier chaud, encre, un accent vert sapin (`globals.css`), titres Fraunces, texte Instrument Sans.
 - Aucune fausse donnée dans les champs de formulaire (pas de placeholder « Jean Dupont »). Les exemples de la galerie sont des CV clairement fictifs.
 - Référencement : titres, descriptions, sitemap, pages « modèle de CV », « CV gratuit », etc. (le site est en `noindex` jusqu'au lancement).
@@ -81,4 +84,5 @@ Projet de GF Web (Gabriel), indépendant de QuickDevis.
 
 - Étape 1 (faite) : squelette, schéma Prisma, base Supabase, projet Vercel, domaine.
 - Étape 2 (faite) : schéma Zod du contenu (`src/lib/resume/schema.ts`), design Classique, aperçu (`/apercu`, page technique) et PDF de bout en bout, test ATS.
-- Étape 3 : l'éditeur (sections, glisser-déposer, enregistrement local, photo).
+- Étape 3 (faite) : éditeur `/editeur` (`src/components/editor/`, store `src/lib/editor/store.ts`). Brouillon dans IndexedDB (clé `cv-pro:brouillon`, validé par Zod au chargement), sections réordonnables (@dnd-kit, poignée, appui maintenu sur tactile), éléments repliables avec monter/descendre, photo recadrée dans le navigateur (react-easy-crop, JPEG 480 px), panneau Design (couleur, police, espacement, forme de photo, langue du CV). Téléphone : onglets en bas (Contenu, Design, Aperçu) ; ordinateur : aperçu permanent à droite.
+- Étape 4 : galerie de designs (objectif 18, dont 6 gratuits) et pages « modèle de CV ».
