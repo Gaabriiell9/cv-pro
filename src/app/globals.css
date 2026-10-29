@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+/* Direction "papeterie" : papier chaud, encre, un seul accent vert sapin. */
+:root {
+  --paper: #f7f4ee;
+  --paper-2: #efeae0;
+  --ink: #1c1b19;
+  --ink-soft: #5b5850;
+  --line: #ddd6c8;
+  --accent: #1f4d3a;
+  --accent-ink: #f7f4ee;
+  --sheet: #ffffff;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-sheet: var(--sheet);
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+}

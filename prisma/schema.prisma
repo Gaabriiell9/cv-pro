@@ -1,0 +1,100 @@
+// Schéma CV Pro. Le contenu d'un CV est un JSON validé par Zod (src/lib/resume/schema.ts).
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") // pooler, port 6543, ?pgbouncer=true
+  directUrl = env("DIRECT_URL") // connexion directe, migrations uniquement
+}
+
+model User {
+  id              String        @id @default(cuid())
+  email           String        @unique
+  passwordHash    String
+  emailVerifiedAt DateTime?
+  locale          String        @default("fr")
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  resumes         Resume[]
+  resetTokens     ResetToken[]
+  entitlements    Entitlement[]
+  stripeCustomerId String?      @unique
+}
+
+// Code à 6 chiffres pour vérifier l'adresse (valable 15 minutes, stocké haché).
+model EmailCode {
+  id        String    @id @default(cuid())
+  email     String
+  codeHash  String
+  expiresAt DateTime
+  attempts  Int       @default(0)
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([email])
+}
+
+model ResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model Resume {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String
+  cvLocale      String   @default("fr") // fr | en | pt
+  templateId    String
+  theme         Json
+  content       Json
+  schemaVersion Int      @default(1)
+  photoKey      String? // chemin dans le bucket privé Supabase Storage
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+}
+
+enum EntitlementKind {
+  PASS_30J
+  PASS_1AN
+}
+
+// Pass à paiement unique, sans renouvellement.
+model Entitlement {
+  id              String          @id @default(cuid())
+  userId          String
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind            EntitlementKind
+  stripeSessionId String          @unique
+  startsAt        DateTime
+  endsAt          DateTime
+  createdAt       DateTime        @default(now())
+
+  @@index([userId, endsAt])
+}
+
+// Idempotence du webhook Stripe.
+model StripeEvent {
+  id          String   @id
+  processedAt DateTime @default(now())
+}
+
+// Limitation de débit (fenêtre fixe), clé du type "pdf:ip:<hash>".
+model RateLimit {
+  key         String   @id
+  windowStart DateTime
+  count       Int
+}
