@@ -3,7 +3,6 @@
   "regions": ["cdg1"],
   "functions": {
     "src/app/api/pdf/route.ts": {
-      "memory": 2048,
       "maxDuration": 30
     }
   }
