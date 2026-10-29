@@ -30,3 +30,11 @@ export function photoTag(photo: string | undefined, shape: "round" | "square" | 
   // alt vide : la photo est décorative pour les ATS.
   return html`<img class="${className} ${shape}" src="${photo}" alt="" />`;
 }
+
+// Éléments réellement remplis : un élément dont tous les textes sont vides n'est pas
+// affiché, et une section sans élément rempli disparaît du CV.
+export function filledItems<T extends { id: string }>(items: T[]): T[] {
+  return items.filter((it) =>
+    Object.entries(it).some(([k, v]) => k !== "id" && typeof v === "string" && v.trim() !== ""),
+  );
+}
