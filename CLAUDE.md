@@ -40,7 +40,10 @@ Projet de GF Web (Gabriel), indépendant de QuickDevis.
 - GitHub : `Gaabriiell9/cv-pro` (privé).
 - Vercel : équipe « gaabriiell9's projects », déploiement auto sur main, région cdg1 (`vercel.json`).
 - Domaine : cv-pro.gf-web.fr, CNAME `cv-pro` vers `cname.vercel-dns.com` chez Cloudflare en « DNS only » (nuage gris).
-- Base : Supabase PostgreSQL eu-west-3, pooler en mode transaction (port 6543, `?pgbouncer=true`), utilisateur dédié `prisma`. `DIRECT_URL` pour les migrations. Migrations appliquées en production via l'outil Supabase **avant** la fusion.
+- Base : Supabase PostgreSQL, projet `cv-pro` (ref `yxtapammnrbigfuvdzww`, organisation Supabase « cv-pro »), région **eu-west-1 (Irlande)** : choix assumé, reste dans l'UE. Pooler en mode transaction (port 6543, `?pgbouncer=true&connection_limit=1`), utilisateur dédié `prisma` (BYPASSRLS). `DIRECT_URL` (port 5432) pour les migrations.
+- Migrations : le SQL est écrit au format Prisma dans `prisma/migrations/<date>_<nom>/migration.sql`, puis appliqué en production via l'outil Supabase (`apply_migration`) **avant** la fusion. On n'utilise pas `prisma migrate deploy` (pas de table `_prisma_migrations`).
+- RLS activée **sans politique** sur toutes les tables : l'API publique Supabase ne voit rien, seul l'utilisateur `prisma` lit et écrit. Toute nouvelle table doit faire de même.
+- `/api/health` : vérifie la connexion à la base (renvoie seulement `ok`).
 - Client Prisma généré dans `src/generated/prisma`, importé depuis `@/generated/prisma` (`src/lib/prisma.ts`).
 - E-mails : Resend, domaine gf-web.fr. Quota de 100/jour partagé avec QuickDevis et gf-web.fr : envoyer le moins possible. Toujours une version texte, toujours vérifier `error` dans la réponse (le SDK ne lève pas d'exception), `escapeHtml()` sur tout contenu dynamique.
 - Paiement : Stripe (compte GF Web), checkout + portail client (factures) + webhook idempotent (`StripeEvent`).
@@ -70,4 +73,5 @@ Projet de GF Web (Gabriel), indépendant de QuickDevis.
 
 ## État
 
-- Étape 1 : squelette, schéma Prisma, infrastructure.
+- Étape 1 (faite) : squelette, schéma Prisma, base Supabase, projet Vercel, domaine.
+- Étape 2 : schéma Zod du contenu, premier design, chaîne PDF de bout en bout, test ATS.
