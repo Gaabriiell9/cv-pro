@@ -6,14 +6,14 @@ import "./globals.css";
 // Polices libres (OFL) stockées dans le dépôt et servies depuis notre domaine :
 // aucun appel à un service tiers depuis le navigateur des visiteurs.
 const display = localFont({
-  src: "../fonts/fraunces-latin-wght-normal.woff2",
+  src: "../../public/fonts/fraunces.woff2",
   variable: "--font-display",
   weight: "100 900",
   display: "swap",
 });
 
 const sans = localFont({
-  src: "../fonts/instrument-sans-latin-wght-normal.woff2",
+  src: "../../public/fonts/instrument-sans.woff2",
   variable: "--font-sans",
   weight: "400 700",
   display: "swap",

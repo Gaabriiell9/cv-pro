@@ -29,9 +29,15 @@ Projet de GF Web (Gabriel), indépendant de QuickDevis.
 - Next.js 16 (App Router, `src/`), TypeScript, Tailwind v4 + shadcn/ui, Prisma 5, NextAuth v4 (JWT), TanStack Query v5, react-hook-form + Zod v4 (formulaires de compte), Zustand (état de l'éditeur), @dnd-kit (glisser-déposer tactile), Framer Motion, Sonner.
 - **Contenu du CV** : une colonne JSON `Resume.content` validée par Zod (`schemaVersion`). Même objet en local et en base.
 - **Designs** : un composant React par design (`src/templates/<slug>/`), page A4 210 x 297 mm. La même source sert à l'aperçu (iframe mise à l'échelle) et au PDF.
-- **PDF** : `/api/pdf` (Node, cdg1) imprime le HTML avec puppeteer-core + @sparticuz/chromium. Rien n'est stocké. Limitation de débit obligatoire.
-  - ATS : ordre du DOM = ordre de lecture, aucun texte en image, icônes SVG décoratives, titres de section standards. Test `pdftotext` sur chaque design.
-- **Polices** : uniquement des polices libres auto-hébergées (`next/font` ou fichiers locaux). Jamais de CDN Google Fonts côté visiteur.
+- **PDF** : `POST /api/pdf` (Node, cdg1) imprime le HTML avec puppeteer-core + @sparticuz/chromium (`src/lib/pdf/generate.ts`). Polices intégrées en data URL, JavaScript désactivé, toute requête réseau bloquée. Rien n'est stocké. Limite : 20 PDF par 10 minutes et par visiteur. `GET /api/pdf` renvoie le CV fictif sur les prévisualisations Vercel uniquement (test).
+- **En local** : les binaires Prisma ne se téléchargent pas dans le bac à sable ; un bouchon non versionné dans `src/generated/prisma` permet `tsc` et `next build`. Le vrai client est généré sur Vercel.
+- **Gabarits** : chaque design est un module TS (`src/templates/<slug>/index.ts`) qui produit du HTML via le tag `html` de `src/lib/resume/html.ts` (échappement automatique). Pas de React dans les designs : le même code tourne dans l'aperçu (navigateur) et le PDF (serveur). Document A4 commun : `src/lib/resume/document.ts`.
+- **Règles pour un design** (vérifiées par `npm run ats`) :
+  - pas de `letter-spacing` au-delà de 0.04em sur du texte (sinon les ATS lisent « E X P É R I E N C E ») ;
+  - ordre du HTML = ordre de lecture ; titres de section standards ; aucun texte en image ;
+  - `break-inside: avoid` sur les blocs, `break-after: avoid` sur les titres.
+- **Polices** : uniquement des polices libres auto-hébergées. Le site utilise les fichiers variables (`public/fonts/*.woff2` via `next/font/local`). Les CV utilisent des fichiers **statiques par graisse** (`public/fonts/cv/`, 400, 400 italique, 600, 700) : les polices variables seraient intégrées au PDF en Type 3, mal lu par les ATS. Jamais de CDN Google Fonts.
+- **Test ATS** : `CHROME_PATH=<chrome> npm run ats` génère le PDF du CV fictif pour chaque design, l'extrait avec `pdftotext` et vérifie l'ordre du texte. À lancer après toute modification d'un design.
 - **Photos** : bucket Supabase Storage privé, URL signées courtes, supprimées avec le CV ou le compte.
 - **Limitation de débit** : table `RateLimit` (fenêtre fixe) dans Postgres.
 
@@ -74,4 +80,5 @@ Projet de GF Web (Gabriel), indépendant de QuickDevis.
 ## État
 
 - Étape 1 (faite) : squelette, schéma Prisma, base Supabase, projet Vercel, domaine.
-- Étape 2 : schéma Zod du contenu, premier design, chaîne PDF de bout en bout, test ATS.
+- Étape 2 (faite) : schéma Zod du contenu (`src/lib/resume/schema.ts`), design Classique, aperçu (`/apercu`, page technique) et PDF de bout en bout, test ATS.
+- Étape 3 : l'éditeur (sections, glisser-déposer, enregistrement local, photo).
