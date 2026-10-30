@@ -38,14 +38,16 @@ export function fontFaceCss(source: FontSource): string {
 
 const DENSITY = { compact: { d: 0.75, size: "9.4pt" }, normal: { d: 1, size: "10pt" }, aere: { d: 1.25, size: "10.5pt" } };
 
-// CSS commun : format A4 exact. Les marges sont celles de la page imprimée ;
-// à l'écran, le body les reproduit pour que l'aperçu corresponde au PDF.
+// CSS commun : format A4, marge d'impression NULLE. Chaque design gère ses marges
+// intérieures avec `box-decoration-break: clone`, ce qui les répète en haut et en bas
+// de chaque page, et permet des fonds pleine page (colonne colorée, bandeau) répétés
+// sur toutes les pages via le fond de <html> (vérifié avec Chromium).
 const BASE_CSS = `
-@page { size: A4; margin: 14mm 16mm; }
+@page { size: A4; margin: 0; }
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-body { margin: 0; background: #fff; color: var(--ink); font-family: var(--font-body), Arial, sans-serif; font-size: var(--size); line-height: 1.42; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
-@media screen { body { width: 210mm; min-height: 297mm; padding: 14mm 16mm; margin: 0 auto; } }
+html { background: var(--page-bg, #fff); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { margin: 0; color: var(--ink); font-family: var(--font-body), Arial, sans-serif; font-size: var(--size); line-height: 1.42; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+@media screen { body { width: 210mm; min-height: 297mm; margin: 0 auto; } }
 h1, h2, h3, p, ul { margin: 0; }
 img { display: block; }
 `;

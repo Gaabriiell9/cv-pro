@@ -28,14 +28,16 @@ function fileName(first: string, last: string): string {
 
 // Test de bout en bout sur les prévisualisations Vercel uniquement (CV fictif).
 // Inexistant en production.
-export async function GET() {
+export async function GET(request: Request) {
   if (process.env.VERCEL_ENV !== "preview") return error(404, "Introuvable.");
+  const id = new URL(request.url).searchParams.get("modele") ?? "classique";
   const { SAMPLE_RESUME } = await import("@/lib/resume/sample");
   const { DEFAULT_THEME } = await import("@/lib/resume/schema");
-  const template = getTemplate("classique")!;
+  const template = getTemplate(id);
+  if (!template) return error(404, "Design introuvable.");
   const started = Date.now();
   const pdf = await generateResumePdf(template, {
-    templateId: "classique",
+    templateId: template.id,
     cvLocale: "fr",
     theme: DEFAULT_THEME,
     content: SAMPLE_RESUME,

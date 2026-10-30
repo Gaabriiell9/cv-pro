@@ -9,7 +9,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "postinstall": "prisma generate",
-    "ats": "tsx scripts/ats-check.mts"
+    "ats": "tsx scripts/ats-check.mts",
+    "thumbs": "tsx scripts/thumbnails.mts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
