@@ -21,7 +21,7 @@ Projet de GF Web (Gabriel), indépendant de QuickDevis.
   - À la fin d'un pass, rien n'est perdu (CV modifiables et exportables avec les designs gratuits).
   - Checkout Stripe en mode paiement, case de renoncement au droit de rétractation (contenu numérique).
 - **Langues** : interface en français ; contenu du CV en français, anglais ou portugais (titres de section traduits).
-- **Comptes** : e-mail + mot de passe, code à 6 chiffres (15 min, haché) uniquement à l'inscription, pour économiser le quota Resend.
+- **Comptes** (choix du 30/10/2026) : sans mot de passe. Code à 6 chiffres envoyé par e-mail à **chaque** connexion (15 min, 5 essais, haché en HMAC avec `NEXTAUTH_SECRET`, usage unique). Le compte est créé à la première connexion réussie. Session JWT de 30 jours.
 - **Bouton « Tenir sur une page »** : réduit espacements puis taille du texte, dans des limites lisibles.
 
 ## Architecture
@@ -55,7 +55,7 @@ Projet de GF Web (Gabriel), indépendant de QuickDevis.
 - RLS activée **sans politique** sur toutes les tables : l'API publique Supabase ne voit rien, seul l'utilisateur `prisma` lit et écrit. Toute nouvelle table doit faire de même.
 - `/api/health` : vérifie la connexion à la base (renvoie seulement `ok`).
 - Client Prisma généré dans `src/generated/prisma`, importé depuis `@/generated/prisma` (`src/lib/prisma.ts`).
-- E-mails : Resend, domaine gf-web.fr. Quota de 100/jour partagé avec QuickDevis et gf-web.fr : envoyer le moins possible. Toujours une version texte, toujours vérifier `error` dans la réponse (le SDK ne lève pas d'exception), `escapeHtml()` sur tout contenu dynamique.
+- E-mails : Resend, compte dédié à CV Pro, domaine `cv-pro.gf-web.fr` vérifié (région eu-west-1), expéditeur `CV Pro <connexion@cv-pro.gf-web.fr>`. Clé en envoi seul limitée à ce domaine (`RESEND_API_KEY` dans Vercel). Quota de 100/jour : plafond global de 90 codes par jour dans `/api/auth/code`, plus 6 par 10 min par visiteur et 3 par 15 min par adresse. Toujours une version texte, toujours vérifier `error` dans la réponse (le SDK ne lève pas d'exception), `escapeHtml()` sur tout contenu dynamique.
 - Paiement : Stripe (compte GF Web), checkout + portail client (factures) + webhook idempotent (`StripeEvent`).
 
 ## Règles techniques (apprises sur QuickDevis)
@@ -90,4 +90,6 @@ Projet de GF Web (Gabriel), indépendant de QuickDevis.
 - Étape 2 (faite) : schéma Zod du contenu (`src/lib/resume/schema.ts`), design Classique, aperçu (`/apercu`, page technique) et PDF de bout en bout, test ATS.
 - Étape 3 (faite) : éditeur `/editeur` (`src/components/editor/`, store `src/lib/editor/store.ts`). Brouillon dans IndexedDB (clé `cv-pro:brouillon`, validé par Zod au chargement), sections réordonnables (@dnd-kit, poignée, appui maintenu sur tactile), éléments repliables avec monter/descendre, photo recadrée dans le navigateur (react-easy-crop, JPEG 480 px), panneau Design (couleur, police, espacement, forme de photo, langue du CV). Téléphone : onglets en bas (Contenu, Design, Aperçu) ; ordinateur : aperçu permanent à droite.
 - Étape 4 (faite) : 18 designs, galerie `/modeles` (par famille), pages `/modeles/<id>` statiques (description, badges, grande vignette, « Utiliser ce modèle » vers `/editeur?modele=<id>`), en-tête et pied communs (`src/components/site/`), `sitemap.ts`, `robots.ts` (fermé tant que `LAUNCHED` est faux dans `src/lib/site.ts`). Éditeur : vignettes dans le panneau Design, niveau facultatif des compétences.
-- Étape 5 : comptes (inscription avec code, connexion, « Mes CV »), puis paiement du Pass.
+- Étape 5a (faite) : connexion par code (`/connexion`, `src/lib/auth/`, `/api/auth/code`, NextAuth fournisseur `code`), `/compte` (déconnexion, export JSON `/api/compte/export`, suppression `DELETE /api/compte` avec saisie de l'e-mail), `src/proxy.ts` protège `/compte`. Logo (`src/app/icon.svg`, `favicon.ico`, `apple-icon.png`, composant `src/components/site/logo.tsx`) dans les en-têtes et l'onglet.
+  - `secureCookie` du proxy : vrai dès que `NEXTAUTH_URL` est en https (ou absent, cas des prévisualisations Vercel), comme NextAuth.
+- Étape 5b : « Mes CV » enregistrés dans le compte (2 en gratuit), photos dans Supabase Storage, puis paiement du Pass.
