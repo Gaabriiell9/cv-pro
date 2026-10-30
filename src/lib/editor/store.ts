@@ -33,7 +33,7 @@ export function emptyItem(type: SectionType): AnyItem {
     case "education":
       return { id, degree: "", school: "", city: "", start: "", end: "", description: "" };
     case "skills":
-      return { id, name: "", level: 3 };
+      return { id, name: "", level: 0 };
     case "languages":
       return { id, name: "", level: "" };
     case "interests":

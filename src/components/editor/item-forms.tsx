@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useEditor } from "@/lib/editor/store";
 import type { Section } from "@/lib/resume/schema";
 import { IconButton, TextArea, TextField } from "./fields";
@@ -178,17 +178,44 @@ export function SkillItems({ section }: Props<Extract<Section, { type: "skills" 
     <>
       {section.items.map((it, i) => (
         <div key={it.id} className="flex items-end gap-1">
-          <TextField
-            className="min-w-0 flex-1"
-            label={`Compétence ${i + 1}`}
-            value={it.name}
-            onChange={(v) => updateItem(section.id, it.id, { name: v })}
-            maxLength={80}
-          />
+          <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_5.5rem] gap-2">
+            <TextField
+              label={`Compétence ${i + 1}`}
+              value={it.name}
+              onChange={(v) => updateItem(section.id, it.id, { name: v })}
+              maxLength={80}
+            />
+            <LevelSelect value={it.level} onChange={(v) => updateItem(section.id, it.id, { level: v })} />
+          </div>
           <RowControls sectionId={section.id} itemId={it.id} index={i} count={section.items.length} />
         </div>
       ))}
+      <p className="text-xs text-ink-soft">Le niveau est facultatif : il s&apos;affiche sous forme de jauge sur certains designs.</p>
     </>
+  );
+}
+
+function LevelSelect({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const id = useId();
+  return (
+    <div className="min-w-0">
+      <label htmlFor={id} className="mb-1 block text-[13px] font-medium text-ink-soft">
+        Niveau
+      </label>
+      <select
+        id={id}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="h-[46px] w-full min-w-0 rounded-lg border border-line bg-white px-2 text-[16px] text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 sm:h-[44px] sm:text-[15px]"
+      >
+        <option value={0}>Aucun</option>
+        {[1, 2, 3, 4, 5].map((n) => (
+          <option key={n} value={n}>
+            {n} / 5
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }
 

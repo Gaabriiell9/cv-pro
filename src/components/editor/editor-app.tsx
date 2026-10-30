@@ -1,13 +1,14 @@
 "use client";
 
-import { Download, Eye, Loader2, Palette, PenLine } from "lucide-react";
+import { Download, Eye, Loader2, Lock, Palette, PenLine, X } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ResumePreview } from "@/components/resume-preview";
 import { useDebounced, useEditorHydration, useRenderRequest } from "@/lib/editor/hooks";
 import { useEditor } from "@/lib/editor/store";
 import { downloadResumePdf } from "@/lib/resume/download";
 import { renderRequestSchema, type ResumeContent } from "@/lib/resume/schema";
+import { getTemplate, TEMPLATES } from "@/templates";
 import { BasicsForm } from "./basics-form";
 import { DesignPanel } from "./design-panel";
 import { SectionsEditor } from "./sections-editor";
@@ -24,9 +25,14 @@ function DownloadButton({ compact }: { compact?: boolean }) {
   const request = useRenderRequest();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [passInfo, setPassInfo] = useState(false);
+  const template = getTemplate(request.templateId);
+  const paid = template ? !template.free : false;
 
   async function onClick() {
     setError(null);
+    // Design du Pass : on l'annonce avant toute tentative, jamais de mauvaise surprise.
+    if (paid) return setPassInfo((v) => !v);
     const parsed = renderRequestSchema.safeParse(request);
     if (!parsed.success) return setError("Un champ dépasse la longueur autorisée.");
     setBusy(true);
@@ -41,9 +47,18 @@ function DownloadButton({ compact }: { compact?: boolean }) {
         type="button"
         onClick={onClick}
         disabled={busy}
-        className={`inline-flex h-11 items-center gap-2 rounded-full bg-accent font-semibold text-accent-ink transition-opacity disabled:opacity-70 ${compact ? "px-4 text-sm" : "px-5"}`}
+        aria-expanded={paid ? passInfo : undefined}
+        className={`inline-flex h-11 items-center gap-2 rounded-full font-semibold transition-opacity disabled:opacity-70 ${
+          paid ? "bg-ink text-paper" : "bg-accent text-accent-ink"
+        } ${compact ? "px-4 text-sm" : "px-5"}`}
       >
-        {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Download className="size-4" aria-hidden />}
+        {busy ? (
+          <Loader2 className="size-4 animate-spin" aria-hidden />
+        ) : paid ? (
+          <Lock className="size-4" aria-hidden />
+        ) : (
+          <Download className="size-4" aria-hidden />
+        )}
         {busy ? "Préparation..." : compact ? "PDF" : "Télécharger le PDF"}
       </button>
       {error ? (
@@ -51,6 +66,41 @@ function DownloadButton({ compact }: { compact?: boolean }) {
           {error}
         </p>
       ) : null}
+      {passInfo ? <PassInfo templateName={template?.name ?? ""} onClose={() => setPassInfo(false)} /> : null}
+    </div>
+  );
+}
+
+function PassInfo({ templateName, onClose }: { templateName: string; onClose: () => void }) {
+  const setTemplate = useEditor((s) => s.setTemplate);
+  const freeOnes = TEMPLATES.filter((t) => t.free);
+  return (
+    <div role="dialog" aria-label="Design du Pass" className="absolute right-0 top-full z-20 mt-2 w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-line bg-white p-4 text-sm shadow-xl">
+      <div className="flex items-start justify-between gap-2">
+        <p className="font-semibold">« {templateName} » est inclus dans le Pass</p>
+        <button type="button" onClick={onClose} aria-label="Fermer" className="-mr-2 -mt-2 inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-ink-soft hover:bg-paper-2">
+          <X className="size-4" aria-hidden />
+        </button>
+      </div>
+      <p className="mt-2 text-ink-soft">
+        Le Pass arrive bientôt : un paiement unique, jamais d&apos;abonnement. En attendant, passez sur un design gratuit pour télécharger votre
+        CV tout de suite, votre contenu est conservé.
+      </p>
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        {freeOnes.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => {
+              setTemplate(t.id);
+              onClose();
+            }}
+            className="h-9 rounded-full border border-line px-3 font-medium hover:border-accent hover:text-accent"
+          >
+            {t.name}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -109,6 +159,18 @@ const TABS: { id: Tab; label: string; icon: typeof PenLine; mobileOnly?: boolean
 export function EditorApp() {
   const ready = useEditorHydration();
   const [tab, setTab] = useState<Tab>("contenu");
+
+  // Arrivée depuis la galerie (/editeur?modele=<id>) : on applique le design une fois
+  // le brouillon chargé, puis on nettoie l'adresse.
+  useEffect(() => {
+    if (!ready) return;
+    const url = new URL(window.location.href);
+    const id = url.searchParams.get("modele");
+    if (!id) return;
+    if (getTemplate(id)) useEditor.getState().setTemplate(id);
+    url.searchParams.delete("modele");
+    window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+  }, [ready]);
   // Sur ordinateur l'aperçu est toujours visible : l'onglet « Aperçu » ramène au contenu.
   const desktopTab: Tab = tab === "apercu" ? "contenu" : tab;
 

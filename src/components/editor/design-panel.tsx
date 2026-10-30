@@ -61,24 +61,51 @@ export function DesignPanel() {
         <h2 id="titre-designs" className="mb-3 font-display text-lg font-semibold">
           Design
         </h2>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {TEMPLATES.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setTemplate(t.id)}
-              aria-pressed={templateId === t.id}
-              className={`rounded-xl border p-3 text-left ${templateId === t.id ? "border-accent ring-2 ring-accent/25" : "border-line hover:border-ink-soft/50"}`}
-            >
-              <span className="block font-medium">{t.name}</span>
-              <span className="mt-1 inline-block rounded-full bg-paper-2 px-2 py-0.5 text-xs text-ink-soft">
-                {t.free ? "Gratuit" : "Pass"}
-                {t.atsOptimized ? " · Optimisé ATS" : ""}
-              </span>
-            </button>
-          ))}
+        <p className="mb-3 text-xs text-ink-soft">
+          Votre contenu est conservé quand vous changez de design. Les designs « Pass » se prévisualisent librement ; leur téléchargement
+          demande un Pass (paiement unique).
+        </p>
+        <div className="grid grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-3">
+          {TEMPLATES.map((t) => {
+            const selected = templateId === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setTemplate(t.id)}
+                aria-pressed={selected}
+                aria-label={`${t.name}, ${t.free ? "gratuit" : "inclus dans le Pass"}, ${t.columns === 1 ? "une colonne" : "deux colonnes"}`}
+                className="group min-w-0 text-left"
+              >
+                <span
+                  className={`relative block overflow-hidden rounded-md bg-white ring-1 transition ${
+                    selected ? "ring-[3px] ring-accent" : "ring-line group-hover:ring-ink-soft/50"
+                  }`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={`/modeles/${t.id}.webp`} alt="" width={480} height={679} loading="lazy" className="block h-auto w-full" />
+                  <span
+                    className={`absolute bottom-1.5 left-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                      t.free ? "bg-accent text-accent-ink" : "bg-ink text-paper"
+                    }`}
+                  >
+                    {t.free ? "Gratuit" : "Pass"}
+                  </span>
+                  {selected ? (
+                    <span className="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-full bg-accent text-accent-ink">
+                      <Check className="size-4" aria-hidden />
+                    </span>
+                  ) : null}
+                </span>
+                <span className="mt-1.5 block truncate text-sm font-medium">{t.name}</span>
+                <span className="block text-xs text-ink-soft">
+                  {t.columns === 1 ? "1 colonne" : "2 colonnes"}
+                  {t.atsOptimized ? " · ATS" : ""}
+                </span>
+              </button>
+            );
+          })}
         </div>
-        <p className="mt-3 text-xs text-ink-soft">D&apos;autres designs arrivent. Votre contenu est conservé quand vous changez de design.</p>
       </section>
 
       <section className="grid grid-cols-1 gap-5 rounded-2xl border border-line bg-white p-4" aria-labelledby="titre-reglages">
