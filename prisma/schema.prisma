@@ -11,21 +11,21 @@ datasource db {
   directUrl = env("DIRECT_URL") // connexion directe, migrations uniquement
 }
 
+// Connexion sans mot de passe : un code à 6 chiffres envoyé par e-mail à chaque
+// connexion. Le compte est créé à la première connexion réussie.
 model User {
-  id              String        @id @default(cuid())
-  email           String        @unique
-  passwordHash    String
-  emailVerifiedAt DateTime?
-  locale          String        @default("fr")
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  resumes         Resume[]
-  resetTokens     ResetToken[]
-  entitlements    Entitlement[]
-  stripeCustomerId String?      @unique
+  id               String        @id @default(cuid())
+  email            String        @unique
+  emailVerifiedAt  DateTime?
+  locale           String        @default("fr")
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  resumes          Resume[]
+  entitlements     Entitlement[]
+  stripeCustomerId String?       @unique
 }
 
-// Code à 6 chiffres pour vérifier l'adresse (valable 15 minutes, stocké haché).
+// Code de connexion (valable 15 minutes, 5 essais, stocké haché, usage unique).
 model EmailCode {
   id        String    @id @default(cuid())
   email     String
@@ -35,19 +35,7 @@ model EmailCode {
   usedAt    DateTime?
   createdAt DateTime  @default(now())
 
-  @@index([email])
-}
-
-model ResetToken {
-  id        String    @id @default(cuid())
-  userId    String
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tokenHash String    @unique
-  expiresAt DateTime
-  usedAt    DateTime?
-  createdAt DateTime  @default(now())
-
-  @@index([userId])
+  @@index([email, createdAt])
 }
 
 model Resume {

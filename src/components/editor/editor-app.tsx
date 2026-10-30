@@ -1,6 +1,8 @@
 "use client";
 
 import { Download, Eye, Loader2, Lock, Palette, PenLine, X } from "lucide-react";
+import { AccountLink } from "@/components/site/account-link";
+import { Logo } from "@/components/site/logo";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ResumePreview } from "@/components/resume-preview";
@@ -191,15 +193,18 @@ export function EditorApp() {
     <div className="min-h-dvh pb-24 lg:pb-0">
       <header className="sticky top-0 z-30 border-b border-line bg-paper/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
-          <Link href="/" className="font-display text-xl font-semibold tracking-tight">
-            CV Pro
+          <Link href="/" aria-label="CV Pro, accueil" className="shrink-0">
+            <Logo />
           </Link>
-          <p className="hidden text-xs text-ink-soft sm:block">Enregistré automatiquement sur cet appareil</p>
-          <div className="lg:hidden">
-            <DownloadButton compact />
-          </div>
-          <div className="hidden lg:block">
-            <DownloadButton />
+          <p className="hidden text-xs text-ink-soft md:block">Enregistré automatiquement sur cet appareil</p>
+          <div className="flex items-center gap-1">
+            <AccountLink compact />
+            <div className="lg:hidden">
+              <DownloadButton compact />
+            </div>
+            <div className="hidden lg:block">
+              <DownloadButton />
+            </div>
           </div>
         </div>
       </header>

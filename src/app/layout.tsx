@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/next";
+import { Providers } from "@/components/providers";
 import "./globals.css";
 
 // Polices libres (OFL) stockées dans le dépôt et servies depuis notre domaine :
@@ -39,7 +40,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="fr" className={`${display.variable} ${sans.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans">
-        {children}
+        <Providers>{children}</Providers>
         <Analytics />
       </body>
     </html>
