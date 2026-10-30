@@ -2,6 +2,7 @@ import { z } from "zod";
 import { createLoginCode, normalizeEmail } from "@/lib/auth/codes";
 import { sendLoginCode } from "@/lib/email";
 import { clientKey, hashedKey, rateLimit } from "@/lib/rate-limit";
+import { rejectForeignRequest } from "@/lib/security/request";
 
 // Demande d'un code de connexion. La réponse est la même que l'adresse ait déjà
 // un compte ou non : on ne révèle pas qui est inscrit.
@@ -13,6 +14,9 @@ function json(status: number, body: Record<string, unknown>, headers?: HeadersIn
 }
 
 export async function POST(request: Request) {
+  const refused = rejectForeignRequest(request);
+  if (refused) return refused;
+  if (Number(request.headers.get("content-length") ?? 0) > 2_000) return json(413, { error: "Requête trop volumineuse." });
   const parsed = bodySchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return json(400, { error: "Adresse e-mail invalide." });
   const email = normalizeEmail(parsed.data.email);
@@ -21,6 +25,7 @@ export async function POST(request: Request) {
   // d'envoi quotidien de Resend (100 e-mails par jour).
   const checks = [
     { key: clientKey(request, "code-ip"), limit: 6, window: 600 },
+    { key: clientKey(request, "code-ip-jour"), limit: 20, window: 86_400 },
     { key: hashedKey("code-email", email), limit: 3, window: 900 },
     { key: "code-global", limit: 90, window: 86_400 },
   ];

@@ -26,8 +26,16 @@ export const authOptions: NextAuthOptions = {
         const email = normalizeEmail(parsed.data.email);
 
         const headers = new Headers((req?.headers ?? {}) as Record<string, string>);
-        const limited = await rateLimit(hashedKey("code-verif", clientIp(headers)), 15, 600);
-        if (!limited.ok) throw new Error("limite");
+        // Par visiteur, puis par adresse visée : une attaque répartie sur de
+        // nombreuses IP reste plafonnée à 10 essais par heure et 30 par jour.
+        const checks = [
+          { key: hashedKey("code-verif", clientIp(headers)), limit: 15, window: 600 },
+          { key: hashedKey("code-verif-h", email), limit: 10, window: 3_600 },
+          { key: hashedKey("code-verif-j", email), limit: 30, window: 86_400 },
+        ];
+        for (const c of checks) {
+          if (!(await rateLimit(c.key, c.limit, c.window)).ok) throw new Error("limite");
+        }
 
         const result = await verifyLoginCode(email, parsed.data.code);
         if (!result.ok) throw new Error(result.reason);

@@ -14,7 +14,8 @@ Projet de GF Web (Gabriel), indépendant de QuickDevis.
 ## Décisions produit (validées le 29/10/2026)
 
 - **Parcours** : CV commencé sans compte, enregistré dans le navigateur (IndexedDB). Compte facultatif pour sauvegarder, dupliquer, adapter.
-- **Designs** : 18 au lancement, 6 gratuits. Badge « payant » visible dès le choix du design (jamais de mur payant surprise).
+- **Gratuit pour l'instant** (décision du 30/10/2026) : tout le site est gratuit, les 18 designs compris. Interrupteur `PAID_ENABLED = false` dans `src/lib/site.ts` : tant qu'il est faux, `TEMPLATES` marque chaque design `free: true` et l'interface n'affiche ni Pass ni badge « Gratuit ». Le champ `free` de chaque design décrit l'offre future (6 gratuits) ; les offres ci-dessous restent le plan si le payant est réactivé.
+- **Designs** : 18 au lancement. Si le payant revient : 6 gratuits, badge « payant » visible dès le choix du design (jamais de mur payant surprise).
 - **Offres** : paiement unique, **aucun renouvellement** :
   - Gratuit : 6 designs, export PDF illimité sans filigrane, 2 CV dans le compte.
   - Pass 30 jours : 5,90 €. Pass 1 an : 19,90 €. Tous les designs, couleur et police libres, CV illimités.
@@ -30,7 +31,7 @@ Projet de GF Web (Gabriel), indépendant de QuickDevis.
 - **Contenu du CV** : une colonne JSON `Resume.content` validée par Zod (`schemaVersion`). Même objet en local et en base.
 - **Designs** : 18 designs déclarés avec `defineTemplate` (`src/templates/kit.ts`) dans `src/templates/designs/<famille>.ts`, catalogue dans `src/templates/index.ts`. Tous partagent la même structure HTML (en-tête, `.flow` ou `.cols` > `.main` + `.side`) ; un design choisit sa disposition (`single`, `side-left`, `side-right`), la place de l'en-tête (`top`, `main`, `side`), le rendu des compétences (`inline`, `list`, `bars`, `tags`) et son CSS préfixé `.cv-<id>`. La même source sert à l'aperçu (iframe) et au PDF.
 - **Page A4** : `@page { margin: 0 }`. Les marges sont le rembourrage de `.cv` (ou des colonnes) avec `box-decoration-break: clone`, répété en haut et en bas de chaque page. Les fonds pleine page (colonne colorée, papier crème, triangles) se posent sur `html { background }` : Chromium les répète sur chaque page.
-- **Gratuits** (6) : classique, epure, horizon, colonne, portrait, serif. Les autres demandent un Pass : aperçu libre, l'éditeur l'annonce au clic sur PDF, et `/api/pdf` renvoie 402.
+- **Gratuits** : tous tant que `PAID_ENABLED` est faux. Sinon 6 (classique, epure, horizon, colonne, portrait, serif) ; les autres demandent un Pass : aperçu libre, l'éditeur l'annonce au clic sur PDF, et `/api/pdf` renvoie 402.
 - **PDF** : `POST /api/pdf` (Node, cdg1) imprime le HTML avec puppeteer-core + @sparticuz/chromium (`src/lib/pdf/generate.ts`). Polices intégrées en data URL, JavaScript désactivé, toute requête réseau bloquée. Rien n'est stocké. Limite : 20 PDF par 10 minutes et par visiteur. `GET /api/pdf` renvoie le CV fictif sur les prévisualisations Vercel uniquement (test).
 - **En local** : les binaires Prisma ne se téléchargent pas dans le bac à sable ; un bouchon non versionné dans `src/generated/prisma` permet `tsc` et `next build`. Le vrai client est généré sur Vercel.
 - **Gabarits** : chaque design est un module TS (`src/templates/<slug>/index.ts`) qui produit du HTML via le tag `html` de `src/lib/resume/html.ts` (échappement automatique). Pas de React dans les designs : le même code tourne dans l'aperçu (navigateur) et le PDF (serveur). Document A4 commun : `src/lib/resume/document.ts`.
@@ -66,6 +67,17 @@ Projet de GF Web (Gabriel), indépendant de QuickDevis.
 - Fetch côté client : toujours `credentials: "include"`.
 - Chaque requête filtre par propriétaire (`where: { id, userId }`), jamais de `?? undefined` dans un filtre.
 - Jetons et codes stockés hachés. Limitation de débit sur les routes sensibles et publiques.
+
+## Sécurité (audit du 30/10/2026)
+
+- **En-têtes** (`next.config.ts`) : CSP stricte (tout en `'self'`, `frame-ancestors 'none'`, `object-src 'none'`), `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`, `poweredByHeader: false`. Les scripts en ligne restent permis (pages statiques de Next). Tout nouveau domaine externe doit être ajouté à la CSP.
+- **Document du CV** : sa propre CSP (`default-src 'none'`, polices et images en `data:` ou du site), en plus de l'iframe sans script et du PDF sans JavaScript ni réseau.
+- **CSRF** : toute route qui modifie ou coûte (`/api/auth/code`, `/api/pdf`, `DELETE /api/compte`) appelle `rejectForeignRequest` (`src/lib/security/request.ts`) : en-tête `Origin` du site obligatoire et corps `application/json`. À reprendre sur chaque nouvelle route POST, PUT, PATCH ou DELETE.
+- **Redirection après connexion** : `safeNext` résout l'URL et exige la même origine (bloque `/\t/site.fr`, `/.//site.fr`, etc.). Ne jamais rediriger vers une valeur venue de l'URL sans elle.
+- **Codes** : l'essai est réservé atomiquement avant la comparaison (5 essais maximum même en parallèle). Limites de vérification : 15 par 10 min par visiteur, 10 par heure et 30 par jour par adresse. Envoi : 6 par 10 min et 20 par jour par visiteur, 3 par 15 min par adresse, 90 par jour au total.
+- **IP** : `x-forwarded-for` est réécrit par Vercel (pas d'usurpation possible tant que Cloudflare reste en « DNS only »).
+- **Base** : RLS sans politique **et** aucun droit pour `anon` et `authenticated` (migration `20261030_revoquer_roles_publics`, droits par défaut compris).
+- **Dépendances** : `npm audit` à zéro. Vérifié : Next 16.4.3 (corrige le contournement du proxy CVE-2026-44575), next-auth 4.24.15 (corrige CVE-2026-73418 et CVE-2026-73420), React 19.3.1. Relancer `npm audit` et vérifier les avis Next, React et next-auth avant chaque mise en production importante.
 
 ## RGPD et CNIL
 

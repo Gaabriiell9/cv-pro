@@ -10,7 +10,6 @@ import { getTemplate, TEMPLATES } from "@/templates";
 const SHOWCASE = ["classique", "colonne", "portrait", "serif"].map((id) => getTemplate(id)!);
 
 export default function Home() {
-  const free = TEMPLATES.filter((t) => t.free).length;
   return (
     <div className="flex min-h-dvh flex-col">
       <SiteHeader />
@@ -21,8 +20,7 @@ export default function Home() {
               Un beau CV en cinq minutes.
             </h1>
             <p className="mt-5 max-w-md text-lg text-ink-soft text-pretty">
-              Sans inscription, sur téléphone comme sur ordinateur. Le gratuit est vraiment gratuit, et le payant n&apos;est jamais un abonnement
-              caché.
+              Sans inscription, sur téléphone comme sur ordinateur. Gratuit, sans filigrane et sans abonnement caché.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link
@@ -36,7 +34,7 @@ export default function Home() {
               </Link>
             </div>
             <ul className="mt-8 space-y-2 text-sm text-ink-soft">
-              <li>{free} modèles gratuits, sans filigrane</li>
+              <li>{TEMPLATES.length} modèles gratuits, sans filigrane</li>
               <li>Un PDF A4 lisible par les logiciels de recrutement</li>
               <li>Votre CV reste sur votre appareil, rien n&apos;est envoyé sans vous</li>
             </ul>

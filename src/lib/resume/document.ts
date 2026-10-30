@@ -66,5 +66,8 @@ export function renderResumeDocument(template: TemplateDef, req: RenderRequest, 
   const title = [req.content.basics.firstName, req.content.basics.lastName].filter(Boolean).join(" ") || "CV";
   // Le CSS ne contient aucune donnée saisie (couleur validée), il n'est donc pas échappé.
   const style = `${fontFaceCss(fonts)}\n${vars}\n${BASE_CSS}\n${template.css}`.replace(/<\//g, "<\\/");
-  return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8">${html`<title>${title}</title>`}<style>${style}</style></head><body>${body}</body></html>`;
+  // Défense en profondeur : le document du CV ne peut rien charger d'externe ni
+  // exécuter de script, dans l'aperçu comme dans le générateur de PDF.
+  const csp = "default-src 'none'; style-src 'unsafe-inline'; img-src data: blob:; font-src data: 'self'";
+  return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${csp}">${html`<title>${title}</title>`}<style>${style}</style></head><body>${body}</body></html>`;
 }
