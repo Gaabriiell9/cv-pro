@@ -1,5 +1,6 @@
 "use client";
 
+import { PAID_ENABLED } from "@/lib/site";
 import { Check } from "lucide-react";
 import { useEditor } from "@/lib/editor/store";
 import type { CvLocale, Theme } from "@/lib/resume/schema";
@@ -62,8 +63,7 @@ export function DesignPanel() {
           Design
         </h2>
         <p className="mb-3 text-xs text-ink-soft">
-          Votre contenu est conservé quand vous changez de design. Les designs « Pass » se prévisualisent librement ; leur téléchargement
-          demande un Pass (paiement unique).
+          Votre contenu est conservé quand vous changez de design.
         </p>
         <div className="grid grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-3">
           {TEMPLATES.map((t) => {
@@ -74,7 +74,7 @@ export function DesignPanel() {
                 type="button"
                 onClick={() => setTemplate(t.id)}
                 aria-pressed={selected}
-                aria-label={`${t.name}, ${t.free ? "gratuit" : "inclus dans le Pass"}, ${t.columns === 1 ? "une colonne" : "deux colonnes"}`}
+                aria-label={`${t.name}, ${PAID_ENABLED ? (t.free ? "gratuit, " : "inclus dans le Pass, ") : ""}${t.columns === 1 ? "une colonne" : "deux colonnes"}`}
                 className="group min-w-0 text-left"
               >
                 <span
@@ -84,13 +84,15 @@ export function DesignPanel() {
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={`/modeles/${t.id}.webp`} alt="" width={480} height={679} loading="lazy" className="block h-auto w-full" />
-                  <span
-                    className={`absolute bottom-1.5 left-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                      t.free ? "bg-accent text-accent-ink" : "bg-ink text-paper"
-                    }`}
-                  >
-                    {t.free ? "Gratuit" : "Pass"}
-                  </span>
+                  {PAID_ENABLED ? (
+                    <span
+                      className={`absolute bottom-1.5 left-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                        t.free ? "bg-accent text-accent-ink" : "bg-ink text-paper"
+                      }`}
+                    >
+                      {t.free ? "Gratuit" : "Pass"}
+                    </span>
+                  ) : null}
                   {selected ? (
                     <span className="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-full bg-accent text-accent-ink">
                       <Check className="size-4" aria-hidden />

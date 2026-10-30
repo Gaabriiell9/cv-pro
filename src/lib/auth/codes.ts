@@ -48,14 +48,20 @@ export async function verifyLoginCode(email: string, code: string): Promise<Veri
   });
   if (!row) return { ok: false, reason: "invalide" };
   if (row.expiresAt.getTime() < Date.now()) return { ok: false, reason: "expire" };
-  if (row.attempts >= MAX_ATTEMPTS) return { ok: false, reason: "essais" };
+
+  // L'essai est réservé avant la comparaison, en une seule requête conditionnelle :
+  // même avec des centaines de requêtes simultanées, un code ne subit que 5 essais.
+  const reserved = await prisma.emailCode.updateMany({
+    where: { id: row.id, usedAt: null, attempts: { lt: MAX_ATTEMPTS } },
+    data: { attempts: { increment: 1 } },
+  });
+  if (reserved.count !== 1) return { ok: false, reason: "essais" };
 
   const expected = Buffer.from(row.codeHash, "hex");
   const given = Buffer.from(hashCode(email, code), "hex");
   const match = expected.length === given.length && timingSafeEqual(expected, given);
   if (!match) {
-    const updated = await prisma.emailCode.update({ where: { id: row.id }, data: { attempts: { increment: 1 } } });
-    return { ok: false, reason: updated.attempts >= MAX_ATTEMPTS ? "essais" : "invalide" };
+    return { ok: false, reason: row.attempts + 1 >= MAX_ATTEMPTS ? "essais" : "invalide" };
   }
   // Consommation atomique : si deux requêtes arrivent en même temps, une seule passe.
   const consumed = await prisma.emailCode.updateMany({ where: { id: row.id, usedAt: null }, data: { usedAt: new Date() } });

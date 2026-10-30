@@ -1,5 +1,6 @@
 import { generateResumePdf } from "@/lib/pdf/generate";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
+import { rejectForeignRequest } from "@/lib/security/request";
 import { renderRequestSchema } from "@/lib/resume/schema";
 import { getTemplate } from "@/templates";
 
@@ -52,6 +53,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const refused = rejectForeignRequest(request);
+  if (refused) return refused;
   const length = Number(request.headers.get("content-length") ?? 0);
   if (length > MAX_BODY_BYTES) return error(413, "Le CV est trop volumineux (photo trop lourde ?).");
 

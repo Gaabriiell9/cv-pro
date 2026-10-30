@@ -95,7 +95,7 @@ export function AccountPanel() {
           Supprimer mon compte
         </h2>
         <p className="mt-2 text-sm text-ink-soft text-pretty">
-          Votre compte, vos CV enregistrés et vos droits sont effacés définitivement. Un Pass en cours est perdu.
+          Votre compte, vos CV enregistrés et vos droits sont effacés définitivement.
         </p>
         {!confirmOpen ? (
           <button type="button" onClick={() => setConfirmOpen(true)} className={`${ghostButton} mt-4 text-red-800 hover:border-red-400`}>

@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const t = getTemplate(slug);
   if (!t) return {};
   return {
-    title: `Modèle de CV ${t.name}${t.free ? " (gratuit)" : ""}`,
+    title: `Modèle de CV ${t.name} (gratuit)`,
     description: `${t.tagline} ${t.description}`.slice(0, 158),
     alternates: { canonical: `/modeles/${t.id}` },
     openGraph: { images: [{ url: `/modeles/${t.id}-grand.webp`, width: 1000, height: 1414 }] },
@@ -54,7 +54,7 @@ export default async function ModelePage({ params }: { params: Promise<{ slug: s
               <li>Format A4, PDF au texte sélectionnable</li>
               <li>{t.columns === 1 ? "Une colonne : lecture parfaite par les logiciels de recrutement" : "Deux colonnes : idéal pour un envoi direct"}</li>
               <li>Couleur, police, espacement et photo réglables</li>
-              <li>{t.free ? "Gratuit, sans filigrane, sans inscription" : "Inclus dans le Pass, sans abonnement"}</li>
+              <li>Gratuit, sans filigrane, sans inscription</li>
             </ul>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link
@@ -67,12 +67,6 @@ export default async function ModelePage({ params }: { params: Promise<{ slug: s
                 Voir tous les modèles
               </Link>
             </div>
-            {!t.free ? (
-              <p className="mt-4 text-sm text-ink-soft">
-                Vous pouvez remplir et prévisualiser ce modèle librement. Le téléchargement en PDF demande un Pass (paiement unique, jamais
-                d&apos;abonnement).
-              </p>
-            ) : null}
           </div>
 
           <div className="overflow-hidden rounded-md bg-white shadow-[0_24px_60px_-24px_rgba(28,27,25,0.4)] ring-1 ring-line/60">

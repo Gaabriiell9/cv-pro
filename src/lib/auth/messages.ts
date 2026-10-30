@@ -10,8 +10,21 @@ export function authMessage(code: string | null | undefined): string {
   return (code && AUTH_MESSAGES[code]) || "La connexion a échoué. Réessayez.";
 }
 
-/** Adresse de retour après connexion : uniquement un chemin interne. */
+/**
+ * Adresse de retour après connexion : uniquement un chemin du site.
+ * On résout l'URL comme le ferait le navigateur (qui supprime tabulations et
+ * retours à la ligne, et lit « /\\ » comme « // ») puis on exige la même origine.
+ */
 export function safeNext(value: string | null | undefined, fallback = "/compte"): string {
-  if (!value || !value.startsWith("/") || value.startsWith("//") || value.startsWith("/\\")) return fallback;
-  return value;
+  if (!value || value.length > 512 || !value.startsWith("/")) return fallback;
+  const base = "https://cv-pro.invalid";
+  try {
+    const url = new URL(value, base);
+    if (url.origin !== base) return fallback;
+    // « /.//site.fr » se résout en « //site.fr » : à refuser aussi.
+    if (url.pathname.startsWith("//") || url.pathname.startsWith("/\\")) return fallback;
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return fallback;
+  }
 }

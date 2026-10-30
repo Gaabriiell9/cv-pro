@@ -1,8 +1,11 @@
 import { currentUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
+import { rejectForeignRequest } from "@/lib/security/request";
 
 // Suppression complète du compte : CV et droits partent avec lui (onDelete: Cascade).
 export async function DELETE(request: Request) {
+  const refused = rejectForeignRequest(request);
+  if (refused) return refused;
   const user = await currentUser();
   if (!user) return Response.json({ error: "Non connecté." }, { status: 401 });
 

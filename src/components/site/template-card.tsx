@@ -1,13 +1,16 @@
 import Image from "next/image";
 import Link from "next/link";
+import { PAID_ENABLED } from "@/lib/site";
 import type { TemplateDef } from "@/templates/types";
 
 export function TemplateBadges({ t, className = "" }: { t: TemplateDef; className?: string }) {
   return (
     <div className={`flex flex-wrap gap-1.5 ${className}`}>
-      <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${t.free ? "bg-accent text-accent-ink" : "bg-ink text-paper"}`}>
-        {t.free ? "Gratuit" : "Pass"}
-      </span>
+      {PAID_ENABLED ? (
+        <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${t.free ? "bg-accent text-accent-ink" : "bg-ink text-paper"}`}>
+          {t.free ? "Gratuit" : "Pass"}
+        </span>
+      ) : null}
       <span className="rounded-full bg-paper-2 px-2.5 py-0.5 text-xs text-ink-soft">{t.columns === 1 ? "1 colonne" : "2 colonnes"}</span>
       {t.atsOptimized ? <span className="rounded-full bg-paper-2 px-2.5 py-0.5 text-xs text-ink-soft">Optimisé ATS</span> : null}
     </div>
