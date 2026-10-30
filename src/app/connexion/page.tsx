@@ -6,7 +6,7 @@ import { SiteHeader } from "@/components/site/site-header";
 
 export const metadata: Metadata = {
   title: "Connexion",
-  description: "Connectez-vous à CV Pro avec un code reçu par e-mail, sans mot de passe.",
+  description: "Connectez-vous à votre compte CV Pro.",
   alternates: { canonical: "/connexion" },
 };
 
@@ -16,11 +16,8 @@ export default function ConnexionPage() {
       <SiteHeader />
       <main className="mx-auto w-full max-w-md flex-1 px-4 pb-16 pt-10 sm:pt-16">
         <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">Connexion</h1>
-        <p className="mt-3 text-ink-soft text-pretty">
-          Pas de mot de passe : recevez un code à 6 chiffres par e-mail. Si vous n&apos;avez pas encore de compte, il est créé automatiquement.
-        </p>
         <Suspense fallback={<div className="mt-8 h-40" />}>
-          <LoginForm />
+          <LoginForm mode="connexion" />
         </Suspense>
       </main>
       <SiteFooter />

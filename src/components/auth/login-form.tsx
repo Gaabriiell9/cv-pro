@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2, MailCheck } from "lucide-react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { type FormEvent, useEffect, useRef, useState } from "react";
@@ -11,10 +12,14 @@ const inputClass =
 const buttonClass =
   "inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-accent px-6 font-semibold text-accent-ink transition-opacity hover:opacity-90 disabled:opacity-60";
 
-export function LoginForm() {
+export type AuthMode = "connexion" | "inscription";
+
+// Même parcours pour se connecter et créer un compte : l'adresse, puis le code reçu.
+export function LoginForm({ mode = "connexion" }: { mode?: AuthMode }) {
   const router = useRouter();
   const params = useSearchParams();
   const next = safeNext(params.get("suite"));
+  const suite = params.get("suite") ? `?suite=${encodeURIComponent(next)}` : "";
 
   const [step, setStep] = useState<"email" | "code">("email");
   const [email, setEmail] = useState("");
@@ -104,10 +109,24 @@ export function LoginForm() {
         )}
         <button type="submit" disabled={busy} className={buttonClass}>
           {busy && <Loader2 className="size-4 animate-spin" aria-hidden />}
-          Recevoir mon code
+          {mode === "inscription" ? "Créer mon compte" : "Continuer"}
         </button>
-        <p className="text-xs text-ink-soft">
-          Votre adresse sert uniquement à vous connecter. Aucune lettre d&apos;information, aucun partage.
+        <p className="text-center text-sm text-ink-soft">
+          {mode === "inscription" ? (
+            <>
+              Déjà un compte ?{" "}
+              <Link href={`/connexion${suite}`} className="font-semibold text-accent underline-offset-4 hover:underline">
+                Se connecter
+              </Link>
+            </>
+          ) : (
+            <>
+              Pas encore de compte ?{" "}
+              <Link href={`/inscription${suite}`} className="font-semibold text-accent underline-offset-4 hover:underline">
+                Créer un compte
+              </Link>
+            </>
+          )}
         </p>
       </form>
     );
@@ -118,7 +137,7 @@ export function LoginForm() {
       <div className="flex items-start gap-3 rounded-xl border border-line bg-white p-4">
         <MailCheck className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
         <p className="min-w-0 text-sm">
-          Code envoyé à <strong className="break-all">{email.trim()}</strong>. Il est valable 15 minutes. Pensez à regarder dans les indésirables.
+          Saisissez le code envoyé à <strong className="break-all">{email.trim()}</strong>.
         </p>
       </div>
       <label className="grid grid-cols-1 gap-1.5">
@@ -152,7 +171,7 @@ export function LoginForm() {
       )}
       <button type="submit" disabled={busy || code.length !== 6} className={buttonClass}>
         {busy && <Loader2 className="size-4 animate-spin" aria-hidden />}
-        Me connecter
+        Valider
       </button>
       <div className="flex flex-wrap justify-between gap-2 text-sm">
         <button
