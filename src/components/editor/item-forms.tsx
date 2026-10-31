@@ -1,5 +1,6 @@
 "use client";
 
+import { Collapse } from "@/components/ui/collapse";
 import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { useId, useState } from "react";
 import { useEditor } from "@/lib/editor/store";
@@ -30,7 +31,7 @@ function ItemCard({
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="rounded-xl border border-line bg-paper/60">
+    <div className="anim-pop rounded-xl border border-line bg-paper/60">
       <div className="flex items-center gap-1 pl-3 pr-1">
         <button
           type="button"
@@ -38,7 +39,7 @@ function ItemCard({
           aria-expanded={open}
           className="flex min-h-12 min-w-0 flex-1 items-center gap-2 text-left text-[15px] font-medium"
         >
-          <ChevronDown className={`size-4 shrink-0 text-ink-soft transition-transform ${open ? "" : "-rotate-90"}`} aria-hidden />
+          <ChevronDown className={`size-4 shrink-0 text-ink-soft transition-transform duration-300 ${open ? "" : "-rotate-90"}`} aria-hidden />
           <span className="truncate">{title}</span>
         </button>
         <IconButton label="Monter" onClick={() => onMove(index - 1)} disabled={index === 0}>
@@ -51,7 +52,9 @@ function ItemCard({
           <Trash2 className="size-4" aria-hidden />
         </IconButton>
       </div>
-      {open ? <div className="grid grid-cols-1 gap-3 border-t border-line px-3 pb-4 pt-3">{children}</div> : null}
+      <Collapse open={open} className="grid grid-cols-1 gap-3 border-t border-line px-3 pb-4 pt-3">
+        {children}
+      </Collapse>
     </div>
   );
 }

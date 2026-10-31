@@ -16,13 +16,13 @@ export default function Home() {
       <main className="flex-1">
         <section className="mx-auto grid w-full max-w-6xl grid-cols-1 items-center gap-12 px-4 pb-16 pt-10 sm:px-6 lg:grid-cols-2 lg:pt-16">
           <div>
-            <h1 className="font-display text-4xl font-semibold leading-[1.05] tracking-tight text-balance sm:text-5xl lg:text-6xl">
+            <h1 style={{ "--i": 0 } as React.CSSProperties} className="anim-fade-up font-display text-4xl font-semibold leading-[1.05] tracking-tight text-balance sm:text-5xl lg:text-6xl">
               Un beau CV en cinq minutes.
             </h1>
-            <p className="mt-5 max-w-md text-lg text-ink-soft text-pretty">
+            <p style={{ "--i": 1 } as React.CSSProperties} className="anim-fade-up mt-5 max-w-md text-lg text-ink-soft text-pretty">
               Sans inscription, sur téléphone comme sur ordinateur. Gratuit, sans filigrane et sans abonnement caché.
             </p>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
+            <div style={{ "--i": 2 } as React.CSSProperties} className="anim-fade-up mt-8 flex flex-wrap items-center gap-3">
               <Link
                 href="/editeur"
                 className="inline-flex h-12 items-center rounded-full bg-accent px-6 font-semibold text-accent-ink transition-opacity hover:opacity-90"
@@ -33,7 +33,7 @@ export default function Home() {
                 Voir les {TEMPLATES.length} modèles
               </Link>
             </div>
-            <ul className="mt-8 space-y-2 text-sm text-ink-soft">
+            <ul style={{ "--i": 3 } as React.CSSProperties} className="anim-fade-up mt-8 space-y-2 text-sm text-ink-soft">
               <li>{TEMPLATES.length} modèles gratuits, sans filigrane</li>
               <li>Un PDF A4 lisible par les logiciels de recrutement</li>
               <li>Votre CV reste sur votre appareil, rien n&apos;est envoyé sans vous</li>
@@ -41,10 +41,10 @@ export default function Home() {
           </div>
 
           <div aria-hidden="true" className="relative mx-auto w-full max-w-[420px]">
-            <div className="absolute left-[-6%] top-[8%] w-[62%] -rotate-6 overflow-hidden rounded-sm shadow-[0_24px_60px_-20px_rgba(28,27,25,0.35)]">
+            <div style={{ animation: "cv-float-in 700ms var(--ease-out) 200ms both" }} className="absolute left-[-6%] top-[8%] w-[62%] -rotate-6 overflow-hidden rounded-sm shadow-[0_24px_60px_-20px_rgba(28,27,25,0.35)]">
               <Image src="/modeles/bloc.webp" alt="" width={480} height={679} className="h-auto w-full" />
             </div>
-            <div className="relative ml-auto w-[78%] rotate-2 overflow-hidden rounded-sm shadow-[0_30px_70px_-20px_rgba(28,27,25,0.45)]">
+            <div style={{ animation: "cv-float-in 700ms var(--ease-out) 80ms both" }} className="relative ml-auto w-[78%] rotate-2 overflow-hidden rounded-sm shadow-[0_30px_70px_-20px_rgba(28,27,25,0.45)]">
               <Image src="/modeles/horizon-grand.webp" alt="" width={1000} height={1414} priority className="h-auto w-full" />
             </div>
           </div>

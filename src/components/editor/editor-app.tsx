@@ -64,7 +64,7 @@ function DownloadButton({ compact }: { compact?: boolean }) {
         {busy ? "Préparation..." : compact ? "PDF" : "Télécharger le PDF"}
       </button>
       {error ? (
-        <p role="alert" className="absolute right-0 top-full z-20 mt-2 w-64 rounded-xl bg-red-50 p-3 text-sm text-red-900 shadow-lg">
+        <p role="alert" className="anim-pop absolute right-0 top-full z-20 mt-2 w-64 rounded-xl bg-red-50 p-3 text-sm text-red-900 shadow-lg">
           {error}
         </p>
       ) : null}
@@ -114,7 +114,7 @@ function Preview() {
     <div className="relative">
       <ResumePreview request={request} label="Aperçu de votre CV" />
       {empty ? (
-        <div className="pointer-events-none absolute inset-x-6 top-16 rounded-xl bg-paper/95 p-4 text-center text-sm text-ink-soft shadow-sm">
+        <div className="anim-fade pointer-events-none absolute inset-x-6 top-16 rounded-xl bg-paper/95 p-4 text-center text-sm text-ink-soft shadow-sm">
           Votre CV apparaîtra ici au fur et à mesure de la saisie.
         </div>
       ) : null}
@@ -132,7 +132,7 @@ function ResetButton() {
       </button>
     );
   return (
-    <div role="alertdialog" aria-label="Confirmer l'effacement" className="flex flex-wrap items-center gap-2 rounded-xl bg-red-50 p-3 text-sm">
+    <div role="alertdialog" aria-label="Confirmer l'effacement" className="anim-pop flex flex-wrap items-center gap-2 rounded-xl bg-red-50 p-3 text-sm">
       <span className="flex-1">Effacer tout le CV de cet appareil ? C&apos;est définitif.</span>
       <button type="button" onClick={() => setConfirm(false)} className="h-10 rounded-lg px-3 font-medium hover:bg-white">
         Annuler
@@ -178,12 +178,12 @@ export function EditorApp() {
 
   function go(next: Tab) {
     setTab(next);
-    window.scrollTo({ top: 0 });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   if (!ready) {
     return (
-      <div className="flex min-h-dvh items-center justify-center text-ink-soft">
+      <div className="anim-fade flex min-h-dvh items-center justify-center text-ink-soft">
         <Loader2 className="size-5 animate-spin" aria-label="Chargement de votre brouillon" />
       </div>
     );
@@ -228,15 +228,15 @@ export function EditorApp() {
             ))}
           </div>
 
-          <div className={`grid grid-cols-1 gap-3 ${tab === "contenu" ? "" : "hidden"} ${desktopTab === "contenu" ? "lg:grid" : "lg:hidden"}`}>
+          <div className={`anim-fade grid grid-cols-1 gap-3 ${tab === "contenu" ? "" : "hidden"} ${desktopTab === "contenu" ? "lg:grid" : "lg:hidden"}`}>
             <BasicsForm />
             <SectionsEditor />
             <ResetButton />
           </div>
-          <div className={`${tab === "design" ? "" : "hidden"} ${desktopTab === "design" ? "lg:block" : "lg:hidden"}`}>
+          <div className={`anim-fade ${tab === "design" ? "" : "hidden"} ${desktopTab === "design" ? "lg:block" : "lg:hidden"}`}>
             <DesignPanel />
           </div>
-          <div className={`${tab === "apercu" ? "" : "hidden"} lg:hidden`}>
+          <div className={`anim-fade ${tab === "apercu" ? "" : "hidden"} lg:hidden`}>
             {tab === "apercu" ? <Preview /> : null}
           </div>
         </div>

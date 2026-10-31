@@ -50,7 +50,7 @@ export function AccountPanel() {
 
   return (
     <div className="mt-8 grid grid-cols-1 gap-5">
-      <section className={card} aria-labelledby="titre-identite">
+      <section className={`anim-fade-up ${card}`} style={{ "--i": 0 } as React.CSSProperties} aria-labelledby="titre-identite">
         <h2 id="titre-identite" className="text-sm font-medium text-ink-soft">
           Connecté avec
         </h2>
@@ -61,7 +61,7 @@ export function AccountPanel() {
         </button>
       </section>
 
-      <section className={card} aria-labelledby="titre-cv">
+      <section className={`anim-fade-up ${card}`} style={{ "--i": 1 } as React.CSSProperties} aria-labelledby="titre-cv">
         <h2 id="titre-cv" className="font-display text-xl font-semibold">
           Mes CV
         </h2>
@@ -77,7 +77,7 @@ export function AccountPanel() {
         </Link>
       </section>
 
-      <section className={card} aria-labelledby="titre-donnees">
+      <section className={`anim-fade-up ${card}`} style={{ "--i": 2 } as React.CSSProperties} aria-labelledby="titre-donnees">
         <h2 id="titre-donnees" className="font-display text-xl font-semibold">
           Mes données
         </h2>
@@ -90,7 +90,7 @@ export function AccountPanel() {
         </a>
       </section>
 
-      <section className="rounded-2xl border border-red-200 bg-red-50/40 p-5 sm:p-6" aria-labelledby="titre-suppression">
+      <section className="anim-fade-up rounded-2xl border border-red-200 bg-red-50/40 p-5 sm:p-6" style={{ "--i": 3 } as React.CSSProperties} aria-labelledby="titre-suppression">
         <h2 id="titre-suppression" className="font-display text-xl font-semibold">
           Supprimer mon compte
         </h2>
@@ -104,7 +104,7 @@ export function AccountPanel() {
           </button>
         ) : (
           <form
-            className="mt-4 grid grid-cols-1 gap-3"
+            className="anim-pop mt-4 grid grid-cols-1 gap-3"
             onSubmit={(e) => {
               e.preventDefault();
               void deleteAccount();
@@ -123,7 +123,7 @@ export function AccountPanel() {
               />
             </label>
             {error && (
-              <p role="alert" className="rounded-xl bg-red-100 px-4 py-3 text-sm text-red-900">
+              <p role="alert" className="anim-pop rounded-xl bg-red-100 px-4 py-3 text-sm text-red-900">
                 {error}
               </p>
             )}

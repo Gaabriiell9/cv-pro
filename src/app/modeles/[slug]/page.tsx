@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { ViewTransition } from "react";
 import { notFound } from "next/navigation";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
@@ -69,6 +70,7 @@ export default async function ModelePage({ params }: { params: Promise<{ slug: s
             </div>
           </div>
 
+          <ViewTransition name={`modele-${t.id}`} share="morph" default="none">
           <div className="overflow-hidden rounded-md bg-white shadow-[0_24px_60px_-24px_rgba(28,27,25,0.4)] ring-1 ring-line/60">
             <Image
               src={`/modeles/${t.id}-grand.webp`}
@@ -80,6 +82,7 @@ export default async function ModelePage({ params }: { params: Promise<{ slug: s
               className="h-auto w-full"
             />
           </div>
+          </ViewTransition>
         </div>
 
         <section aria-labelledby="titre-autres" className="mt-20">

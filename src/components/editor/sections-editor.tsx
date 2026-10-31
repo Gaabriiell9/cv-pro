@@ -1,5 +1,6 @@
 "use client";
 
+import { Collapse } from "@/components/ui/collapse";
 import {
   closestCenter,
   DndContext,
@@ -59,7 +60,7 @@ function SortableSection({ section, defaultTitle }: { section: Section; defaultT
     <section
       ref={setNodeRef}
       style={{ transform: CSS.Translate.toString(transform), transition }}
-      className={`rounded-2xl border border-line bg-white ${isDragging ? "relative z-10 shadow-xl" : ""} ${section.visible ? "" : "opacity-70"}`}
+      className={`rounded-2xl border border-line bg-white transition-[box-shadow,opacity] duration-200 ${isDragging ? "relative z-10 shadow-xl" : ""} ${section.visible ? "" : "opacity-70"}`}
       aria-label={label}
     >
       <div className="flex items-center gap-0.5 py-1 pl-1 pr-1">
@@ -80,7 +81,7 @@ function SortableSection({ section, defaultTitle }: { section: Section; defaultT
           className="flex min-h-12 min-w-0 flex-1 items-center gap-2 text-left"
         >
           <span className="truncate font-display text-lg font-semibold">{label}</span>
-          <ChevronDown className={`size-4 shrink-0 text-ink-soft transition-transform ${open ? "" : "-rotate-90"}`} aria-hidden />
+          <ChevronDown className={`size-4 shrink-0 text-ink-soft transition-transform duration-300 ${open ? "" : "-rotate-90"}`} aria-hidden />
         </button>
         <IconButton label={section.visible ? "Masquer dans le CV" : "Afficher dans le CV"} onClick={() => toggleSection(section.id)}>
           {section.visible ? <Eye className="size-4" aria-hidden /> : <EyeOff className="size-4" aria-hidden />}
@@ -91,7 +92,7 @@ function SortableSection({ section, defaultTitle }: { section: Section; defaultT
       </div>
 
       {confirm ? (
-        <div role="alertdialog" aria-label="Confirmer la suppression" className="mx-3 mb-3 flex flex-wrap items-center gap-2 rounded-xl bg-red-50 p-3 text-sm">
+        <div role="alertdialog" aria-label="Confirmer la suppression" className="anim-pop mx-3 mb-3 flex flex-wrap items-center gap-2 rounded-xl bg-red-50 p-3 text-sm">
           <span className="flex-1">Supprimer « {label} » et son contenu ?</span>
           <button type="button" onClick={() => setConfirm(false)} className="h-10 rounded-lg px-3 font-medium hover:bg-white">
             Annuler
@@ -102,8 +103,7 @@ function SortableSection({ section, defaultTitle }: { section: Section; defaultT
         </div>
       ) : null}
 
-      {open ? (
-        <div className="grid grid-cols-1 gap-3 px-3 pb-4">
+      <Collapse open={open} className="grid grid-cols-1 gap-3 px-3 pb-4">
           <TextField
             label="Titre affiché"
             value={section.title}
@@ -122,8 +122,7 @@ function SortableSection({ section, defaultTitle }: { section: Section; defaultT
               {ADD_ITEM_LABEL[section.type]}
             </button>
           ) : null}
-        </div>
-      ) : null}
+      </Collapse>
     </section>
   );
 }
