@@ -85,7 +85,7 @@ export function LoginForm({ mode = "connexion" }: { mode?: AuthMode }) {
 
   if (step === "email") {
     return (
-      <form onSubmit={requestCode} className="mt-8 grid grid-cols-1 gap-4" noValidate={false}>
+      <form key="email" onSubmit={requestCode} className="anim-fade-up mt-8 grid grid-cols-1 gap-4">
         <label className="grid grid-cols-1 gap-1.5">
           <span className="text-sm font-medium">Adresse e-mail</span>
           <input
@@ -103,7 +103,7 @@ export function LoginForm({ mode = "connexion" }: { mode?: AuthMode }) {
           />
         </label>
         {error && (
-          <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800">
+          <p role="alert" className="anim-pop rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800">
             {error}
           </p>
         )}
@@ -133,7 +133,7 @@ export function LoginForm({ mode = "connexion" }: { mode?: AuthMode }) {
   }
 
   return (
-    <form onSubmit={submitCode} className="mt-8 grid grid-cols-1 gap-4">
+    <form key="code" onSubmit={submitCode} className="anim-fade-up mt-8 grid grid-cols-1 gap-4">
       <div className="flex items-start gap-3 rounded-xl border border-line bg-white p-4">
         <MailCheck className="mt-0.5 size-5 shrink-0 text-accent" aria-hidden />
         <p className="min-w-0 text-sm">
@@ -160,12 +160,12 @@ export function LoginForm({ mode = "connexion" }: { mode?: AuthMode }) {
         />
       </label>
       {error && (
-        <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800">
+        <p role="alert" className="anim-pop rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800">
           {error}
         </p>
       )}
       {info && (
-        <p role="status" className="rounded-xl bg-paper-2 px-4 py-3 text-sm">
+        <p role="status" className="anim-pop rounded-xl bg-paper-2 px-4 py-3 text-sm">
           {info}
         </p>
       )}

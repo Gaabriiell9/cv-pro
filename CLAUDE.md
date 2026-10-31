@@ -94,6 +94,7 @@ Projet de GF Web (Gabriel), indépendant de QuickDevis.
 - Designs : les éléments vides et les sections sans contenu ne s'affichent pas (`filledItems` dans `src/templates/shared.ts`).
 - Direction « papeterie » : fond papier chaud, encre, un accent vert sapin (`globals.css`), titres Fraunces, texte Instrument Sans.
 - Aucune fausse donnée dans les champs de formulaire (pas de placeholder « Jean Dupont »). Les exemples de la galerie sont des CV clairement fictifs.
+- **Mouvement** (`globals.css`, section « Mouvement ») : durées courtes (`--dur-fast` 160 ms, `--dur` 260 ms, `--dur-slow` 420 ms), courbe `--ease-out`. Classes `anim-fade`, `anim-fade-up` (cascade avec la variable `--i`), `anim-pop` à poser sur ce qui apparaît. Blocs repliables : composant `Collapse` (`src/components/ui/collapse.tsx`, classe `cv-collapse`, jamais `collapse` qui est une classe Tailwind). Pages : `<ViewTransition>` de React autour des pages (layout), en-tête nommé `site-header` (immobile), vignette de modèle et grande image liées par `name="modele-<id>"` (`share="morph"`). Aperçu : deux iframes en fondu croisé (plus de flash). Tout est coupé si l'appareil demande de réduire les animations. Ne jamais animer un élément des designs de CV (règles ATS), seulement l'interface du site.
 - Référencement : titres, descriptions, sitemap, pages « modèle de CV », « CV gratuit », etc. (le site est en `noindex` jusqu'au lancement).
 
 ## État

@@ -56,14 +56,14 @@ function CropDialog({ src, onCancel, onDone }: { src: string; onCancel: () => vo
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/60 sm:items-center sm:p-6">
+    <div className="anim-fade fixed inset-0 z-50 flex items-end justify-center bg-ink/60 sm:items-center sm:p-6">
       <div
         ref={dialogRef}
         tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby="titre-recadrage"
-        className="flex h-[100dvh] w-full flex-col bg-white outline-none sm:h-auto sm:max-w-md sm:rounded-2xl"
+        className="anim-pop flex h-[100dvh] w-full flex-col bg-white outline-none sm:h-auto sm:max-w-md sm:rounded-2xl"
       >
         <h2 id="titre-recadrage" className="px-4 pb-2 pt-4 font-display text-lg font-semibold">
           Recadrer la photo
