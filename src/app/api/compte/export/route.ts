@@ -10,6 +10,7 @@ export async function GET() {
     where: { id: user.id },
     select: {
       email: true,
+      name: true,
       emailVerifiedAt: true,
       locale: true,
       createdAt: true,

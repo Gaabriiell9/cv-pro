@@ -10,6 +10,16 @@ export function authMessage(code: string | null | undefined): string {
   return (code && AUTH_MESSAGES[code]) || "La connexion a échoué. Réessayez.";
 }
 
+/** Message lisible pour un échec de connexion Google (paramètre ?error de NextAuth). */
+export function oauthMessage(error: string | null | undefined): string | null {
+  if (!error) return null;
+  if (error === "AccessDenied") return "Connexion Google refusée : l'adresse de ce compte Google n'est pas vérifiée.";
+  if (["OAuthSignin", "OAuthCallback", "OAuthCreateAccount", "Callback", "OAuthAccountNotLinked"].includes(error)) {
+    return "La connexion avec Google n'a pas abouti. Réessayez ou utilisez votre e-mail.";
+  }
+  return null;
+}
+
 /**
  * Adresse de retour après connexion : uniquement un chemin du site.
  * On résout l'URL comme le ferait le navigateur (qui supprime tabulations et

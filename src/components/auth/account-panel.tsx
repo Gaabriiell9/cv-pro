@@ -12,6 +12,7 @@ const ghostButton =
 export function AccountPanel() {
   const { data, status } = useSession();
   const email = data?.user?.email ?? "";
+  const name = data?.user?.name ?? "";
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmation, setConfirmation] = useState("");
   const [busy, setBusy] = useState(false);
@@ -51,10 +52,10 @@ export function AccountPanel() {
   return (
     <div className="mt-8 grid grid-cols-1 gap-5">
       <section className={`anim-fade-up ${card}`} style={{ "--i": 0 } as React.CSSProperties} aria-labelledby="titre-identite">
-        <h2 id="titre-identite" className="text-sm font-medium text-ink-soft">
-          Connecté avec
+        <h2 id="titre-identite" className="font-display text-xl font-semibold">
+          {name || "Mon compte"}
         </h2>
-        <p className="mt-1 break-all text-lg font-semibold">{email}</p>
+        <p className="mt-1 break-all text-ink-soft">{email}</p>
         <button type="button" onClick={() => void signOut({ callbackUrl: "/" })} className={`${ghostButton} mt-4`}>
           <LogOut className="size-4" aria-hidden />
           Me déconnecter
