@@ -18,7 +18,7 @@ export function ResumePreview({ request, label }: { request: RenderRequest; labe
   const [heights, setHeights] = useState([A4_HEIGHT_PX, A4_HEIGHT_PX]);
   const [docs, setDocs] = useState<[string, string]>(["", ""]);
   const [active, setActive] = useState(0);
-  const pending = useRef<number | null>(null);
+  const [pending, setPending] = useState<number | null>(null);
 
   const doc = useMemo(() => {
     const template = getTemplate(request.templateId);
@@ -26,19 +26,27 @@ export function ResumePreview({ request, label }: { request: RenderRequest; labe
     return renderResumeDocument(template, request, (file) => `/fonts/cv/${file}`);
   }, [request]);
 
-  // Chaque nouveau document part dans l'iframe inactive.
-  useEffect(() => {
-    setDocs((prev) => {
-      if (prev[active] === doc) return prev;
-      const target = prev[active] === "" ? active : 1 - active;
-      pending.current = target;
-      const next: [string, string] = [...prev];
-      next[target] = doc;
-      return next;
-    });
-    // `active` est volontairement absent : seul un nouveau document déclenche l'échange.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [doc]);
+  // Chaque nouveau document part dans l'iframe inactive. Ajustement pendant le rendu
+  // (motif recommandé par React) plutôt que dans un effet.
+  const [lastDoc, setLastDoc] = useState("");
+  if (doc !== lastDoc) {
+    setLastDoc(doc);
+    const other = 1 - active;
+    if (docs[active] === doc) {
+      setPending(null); // retour au document affiché : on annule l'échange en cours
+    } else if (docs[active] === "") {
+      setPending(active); // premier affichage : directement dans l'iframe active
+      setDocs((prev) => (active === 0 ? [doc, prev[1]] : [prev[0], doc]));
+    } else if (docs[other] === doc) {
+      // L'iframe cachée contient déjà ce document (retour à un design vu juste avant) :
+      // son srcDoc ne change pas, elle ne se rechargerait jamais. On l'affiche tout de
+      // suite, sauf si elle est encore en train de le charger (onLoad s'en chargera).
+      if (pending !== other) setActive(other);
+    } else {
+      setPending(other);
+      setDocs((prev) => (other === 0 ? [doc, prev[1]] : [prev[0], doc]));
+    }
+  }
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -56,8 +64,8 @@ export function ResumePreview({ request, label }: { request: RenderRequest; labe
       next[index] = h;
       return next;
     });
-    if (pending.current === index) {
-      pending.current = null;
+    if (pending === index) {
+      setPending(null);
       setActive(index);
     }
   }

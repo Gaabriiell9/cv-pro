@@ -41,10 +41,10 @@ export default function Home() {
           </div>
 
           <div aria-hidden="true" className="relative mx-auto w-full max-w-[420px]">
-            <div style={{ animation: "cv-float-in 700ms var(--ease-out) 200ms both" }} className="absolute left-[-6%] top-[8%] w-[62%] -rotate-6 overflow-hidden rounded-sm shadow-[0_24px_60px_-20px_rgba(28,27,25,0.35)]">
+            <div style={{ animation: "cv-float-in 700ms var(--ease-out) 200ms backwards" }} className="absolute left-[-6%] top-[8%] w-[62%] -rotate-6 overflow-hidden rounded-sm shadow-[0_24px_60px_-20px_rgba(28,27,25,0.35)]">
               <Image src="/modeles/bloc.webp" alt="" width={480} height={679} className="h-auto w-full" />
             </div>
-            <div style={{ animation: "cv-float-in 700ms var(--ease-out) 80ms both" }} className="relative ml-auto w-[78%] rotate-2 overflow-hidden rounded-sm shadow-[0_30px_70px_-20px_rgba(28,27,25,0.45)]">
+            <div style={{ animation: "cv-float-in 700ms var(--ease-out) 80ms backwards" }} className="relative ml-auto w-[78%] rotate-2 overflow-hidden rounded-sm shadow-[0_30px_70px_-20px_rgba(28,27,25,0.45)]">
               <Image src="/modeles/horizon-grand.webp" alt="" width={1000} height={1414} priority className="h-auto w-full" />
             </div>
           </div>

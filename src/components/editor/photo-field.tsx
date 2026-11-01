@@ -2,6 +2,7 @@
 
 import { ImagePlus, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Cropper, { type Area } from "react-easy-crop";
 import { useEditor } from "@/lib/editor/store";
 
@@ -164,16 +165,20 @@ export function PhotoField() {
           e.target.value = "";
         }}
       />
-      {source ? (
-        <CropDialog
-          src={source}
-          onCancel={() => setSource(null)}
-          onDone={(dataUrl) => {
-            setPhoto(dataUrl);
-            setSource(null);
-          }}
-        />
-      ) : null}
+      {/* Fenêtre rendue directement dans <body> : rien ne peut passer devant. */}
+      {source
+        ? createPortal(
+            <CropDialog
+              src={source}
+              onCancel={() => setSource(null)}
+              onDone={(dataUrl) => {
+                setPhoto(dataUrl);
+                setSource(null);
+              }}
+            />,
+            document.body,
+          )
+        : null}
     </div>
   );
 }
