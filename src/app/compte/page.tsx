@@ -12,8 +12,7 @@ export default function ComptePage() {
   return (
     <div className="flex min-h-dvh flex-col">
       <SiteHeader />
-      <main className="mx-auto w-full max-w-2xl flex-1 px-4 pb-16 pt-10 sm:px-6">
-        <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">Mon compte</h1>
+      <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-16 pt-8 sm:px-6 sm:pt-12">
         <AccountPanel />
       </main>
       <SiteFooter />

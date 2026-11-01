@@ -87,7 +87,7 @@ Projet de GF Web (Gabriel), indépendant de QuickDevis.
 ## RGPD et CNIL
 
 - Ne stocker que le nécessaire : compte (e-mail, nom) et CV (photo comprise). Le PDF n'est jamais conservé.
-- Export des données et suppression complète du compte (CV, photos, droits) depuis `/compte`.
+- Suppression complète du compte (CV, photo, droits) depuis `/compte`. L'export JSON a été retiré du tableau de bord le 01/11/2026 (peu utilisé) : la copie des données se demande par e-mail (droit d'accès, réponse sous un mois, indiqué dans `/confidentialite`).
 - Aucun cookie non essentiel. Mesure d'audience sans cookie (Vercel Web Analytics).
 - Pages : mentions légales, CGU/CGV, confidentialité.
 
@@ -108,8 +108,9 @@ Projet de GF Web (Gabriel), indépendant de QuickDevis.
 - Étape 2 (faite) : schéma Zod du contenu (`src/lib/resume/schema.ts`), design Classique, aperçu (`/apercu`, page technique) et PDF de bout en bout, test ATS.
 - Étape 3 (faite) : éditeur `/editeur` (`src/components/editor/`, store `src/lib/editor/store.ts`). Brouillon dans IndexedDB (clé `cv-pro:brouillon`, validé par Zod au chargement), sections réordonnables (@dnd-kit, poignée, appui maintenu sur tactile), éléments repliables avec monter/descendre, photo recadrée dans le navigateur (react-easy-crop, JPEG 480 px), panneau Design (couleur, police, espacement, forme de photo, langue du CV). Téléphone : onglets en bas (Contenu, Design, Aperçu) ; ordinateur : aperçu permanent à droite.
 - Étape 4 (faite) : 18 designs, galerie `/modeles` (par famille), pages `/modeles/<id>` statiques (description, badges, grande vignette, « Utiliser ce modèle » vers `/editeur?modele=<id>`), en-tête et pied communs (`src/components/site/`), `sitemap.ts`, `robots.ts` (fermé tant que `LAUNCHED` est faux dans `src/lib/site.ts`). Éditeur : vignettes dans le panneau Design, niveau facultatif des compétences.
-- Étape 5a (faite) : connexion par code (`/connexion`, `src/lib/auth/`, `/api/auth/code`, NextAuth fournisseur `code`), `/compte` (déconnexion, export JSON `/api/compte/export`, suppression `DELETE /api/compte` avec saisie de l'e-mail), `src/proxy.ts` protège `/compte`. Logo (`src/app/icon.svg`, `favicon.ico`, `apple-icon.png`, composant `src/components/site/logo.tsx`) dans les en-têtes et l'onglet.
+- Étape 5a (faite) : connexion par code (`/connexion`, `src/lib/auth/`, `/api/auth/code`, NextAuth fournisseur `code`), `/compte` (déconnexion, suppression `DELETE /api/compte` avec saisie de l'e-mail), `src/proxy.ts` protège `/compte`. Logo (`src/app/icon.svg`, `favicon.ico`, `apple-icon.png`, composant `src/components/site/logo.tsx`) dans les en-têtes et l'onglet.
   - `secureCookie` du proxy : vrai dès que `NEXTAUTH_URL` est en https (ou absent, cas des prévisualisations Vercel), comme NextAuth.
 - Connexion épurée (30/10/2026) : `/connexion` ne montre que l'adresse e-mail et un lien « Créer un compte » vers `/inscription` (même composant `LoginForm`, `mode="inscription"`). Aucune explication du mécanisme par code à l'écran.
 - Étape 5b (faite le 01/11/2026) : compte obligatoire, CV enregistré dans le compte et rechargé à la connexion, statut d'enregistrement dans l'en-tête de l'éditeur, « Mon CV » dans `/compte`. Pages `/confidentialite` et `/conditions`. Connexion Google configurée (projet Google Cloud `cv-pro`, application publiée sans logo pour éviter la validation).
+- Tableau de bord `/compte` (01/11/2026) : « Bonjour <prénom> », carte du CV avec miniature réelle (`ResumePreview`), modèle, date relative, progression des rubriques, « Reprendre mon CV » et « Télécharger le PDF » ; état vide avec vignettes de modèles ; suppression du compte repliée en bas.
 - Suite possible : plusieurs CV par compte (dupliquer, adapter), pré-remplir le nom du CV avec celui du compte.
