@@ -53,7 +53,8 @@ model Resume {
   theme         Json
   content       Json
   schemaVersion Int      @default(1)
-  photoKey      String? // chemin dans le bucket privé Supabase Storage
+  photo         String? // photo recadrée (data URL JPEG 480 px, environ 50 Ko), supprimée avec le CV
+  photoKey      String? // réservé : chemin dans un bucket privé si les photos y passent un jour
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

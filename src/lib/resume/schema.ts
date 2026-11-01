@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-// Contenu d'un CV : le même objet est stocké dans le navigateur (anonyme) et dans
+// Contenu d'un CV : le même objet est stocké dans le navigateur (copie locale) et dans
 // Resume.content (compte). Toute évolution incompatible augmente SCHEMA_VERSION.
 export const SCHEMA_VERSION = 1;
 

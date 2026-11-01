@@ -3,7 +3,8 @@
 import { Download, FileText, Loader2, LogOut, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { clearLocalDraft } from "@/lib/editor/store";
 
 const card = "rounded-2xl border border-line bg-white p-5 sm:p-6";
 const ghostButton =
@@ -17,6 +18,31 @@ export function AccountPanel() {
   const [confirmation, setConfirmation] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Résumé du CV enregistré dans le compte (undefined : en cours de chargement).
+  const [cv, setCv] = useState<{ title: string; updatedAt: string } | null | undefined>(undefined);
+
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    fetch("/api/cv", { credentials: "include", cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : { cv: null }))
+      .then((d: { cv: { content: { basics: { firstName: string; lastName: string } }; updatedAt: string } | null }) =>
+        setCv(
+          d.cv
+            ? {
+                title: [d.cv.content.basics.firstName, d.cv.content.basics.lastName].filter(Boolean).join(" ") || "Mon CV",
+                updatedAt: d.cv.updatedAt,
+              }
+            : null,
+        ),
+      )
+      .catch(() => setCv(null));
+  }, [status]);
+
+  // Déconnexion : la copie locale du CV est effacée de cet appareil.
+  async function logout() {
+    await clearLocalDraft().catch(() => {});
+    await signOut({ callbackUrl: "/" });
+  }
 
   if (status === "loading") {
     return (
@@ -41,7 +67,7 @@ export function AccountPanel() {
         setError(body.error ?? "La suppression a échoué. Réessayez.");
         return;
       }
-      await signOut({ callbackUrl: "/" });
+      await logout();
     } catch {
       setError("Connexion au serveur impossible. Vérifiez votre réseau.");
     } finally {
@@ -56,7 +82,7 @@ export function AccountPanel() {
           {name || "Mon compte"}
         </h2>
         <p className="mt-1 break-all text-ink-soft">{email}</p>
-        <button type="button" onClick={() => void signOut({ callbackUrl: "/" })} className={`${ghostButton} mt-4`}>
+        <button type="button" onClick={() => void logout()} className={`${ghostButton} mt-4`}>
           <LogOut className="size-4" aria-hidden />
           Me déconnecter
         </button>
@@ -64,17 +90,22 @@ export function AccountPanel() {
 
       <section className={`anim-fade-up ${card}`} style={{ "--i": 1 } as React.CSSProperties} aria-labelledby="titre-cv">
         <h2 id="titre-cv" className="font-display text-xl font-semibold">
-          Mes CV
+          Mon CV
         </h2>
-        <p className="mt-2 text-sm text-ink-soft text-pretty">
-          L&apos;enregistrement de vos CV dans votre compte arrive bientôt. En attendant, votre CV en cours reste enregistré sur cet appareil.
+        <p className="mt-2 min-h-5 text-sm text-ink-soft text-pretty">
+          {cv === undefined
+            ? " "
+            : cv
+              ? `${cv.title}, modifié le ${new Date(cv.updatedAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })} à ${new Date(cv.updatedAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}.`
+              : "Vous n'avez pas encore commencé votre CV."}
         </p>
+        <p className="mt-1 text-sm text-ink-soft">Il est enregistré dans votre compte : vous le retrouvez sur tous vos appareils.</p>
         <Link
           href="/editeur"
           className="mt-4 inline-flex h-11 items-center gap-2 rounded-full bg-accent px-5 text-sm font-semibold text-accent-ink hover:opacity-90"
         >
           <FileText className="size-4" aria-hidden />
-          Ouvrir l&apos;éditeur
+          {cv ? "Reprendre mon CV" : "Créer mon CV"}
         </Link>
       </section>
 

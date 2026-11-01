@@ -145,7 +145,7 @@ export function PhotoField() {
             </button>
           ) : null}
         </div>
-        <p className="mt-1 text-xs text-ink-soft">Facultative. Elle reste sur votre appareil.</p>
+        <p className="mt-1 text-xs text-ink-soft">Facultative. Recadrée sur votre appareil, enregistrée avec votre CV.</p>
         {error ? (
           <p role="alert" className="mt-1 text-xs text-red-800">
             {error}

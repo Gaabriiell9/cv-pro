@@ -20,7 +20,7 @@ export default function Home() {
               Un beau CV en cinq minutes.
             </h1>
             <p style={{ "--i": 1 } as React.CSSProperties} className="anim-fade-up mt-5 max-w-md text-lg text-ink-soft text-pretty">
-              Sans inscription, sur téléphone comme sur ordinateur. Gratuit, sans filigrane et sans abonnement caché.
+              Sur téléphone comme sur ordinateur. Gratuit, sans filigrane et sans abonnement caché.
             </p>
             <div style={{ "--i": 2 } as React.CSSProperties} className="anim-fade-up mt-8 flex flex-wrap items-center gap-3">
               <Link
@@ -36,7 +36,7 @@ export default function Home() {
             <ul style={{ "--i": 3 } as React.CSSProperties} className="anim-fade-up mt-8 space-y-2 text-sm text-ink-soft">
               <li>{TEMPLATES.length} modèles gratuits, sans filigrane</li>
               <li>Un PDF A4 lisible par les logiciels de recrutement</li>
-              <li>Votre CV reste sur votre appareil, rien n&apos;est envoyé sans vous</li>
+              <li>Votre CV enregistré dans votre compte, sur tous vos appareils</li>
             </ul>
           </div>
 

@@ -36,13 +36,13 @@ export default function ConditionsPage() {
         <Section title="Le service">
           <p>
             CV Pro, édité par GF Web (gf-web.fr), permet de rédiger un CV en ligne, de choisir un modèle et de le télécharger en PDF. Le service
-            est <strong>gratuit</strong>, sans abonnement et sans publicité. Il peut être utilisé sans compte.
+            est <strong>gratuit</strong>, sans abonnement et sans publicité. Un compte gratuit est nécessaire pour créer et enregistrer votre CV.
           </p>
         </Section>
 
         <Section title="Votre compte">
           <ul>
-            <li>Le compte est facultatif. Il se crée avec une adresse e-mail (et un code de connexion) ou avec un compte Google.</li>
+            <li>Le compte se crée avec votre nom et votre adresse e-mail (puis un code de connexion), ou avec un compte Google.</li>
             <li>Vous êtes responsable de l&apos;accès à votre adresse e-mail, qui sert à vous connecter.</li>
             <li>
               Vous pouvez supprimer votre compte à tout moment depuis la page{" "}
@@ -86,7 +86,7 @@ export default function ConditionsPage() {
               permanente.
             </li>
             <li>
-              Votre CV est enregistré dans votre navigateur : vider les données du navigateur l&apos;efface. Pensez à télécharger votre PDF.
+              Votre CV est enregistré automatiquement dans votre compte. Gardez tout de même une copie de votre PDF pour vos candidatures.
             </li>
             <li>CV Pro ne garantit pas l&apos;obtention d&apos;un entretien ou d&apos;un emploi.</li>
           </ul>

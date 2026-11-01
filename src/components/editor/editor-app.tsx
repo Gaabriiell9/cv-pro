@@ -1,10 +1,12 @@
 "use client";
 
-import { Download, Eye, Loader2, Lock, Palette, PenLine, X } from "lucide-react";
+import { Check, CloudOff, Download, Eye, Loader2, Lock, Palette, PenLine, TriangleAlert, X } from "lucide-react";
 import { AccountLink } from "@/components/site/account-link";
 import { Logo } from "@/components/site/logo";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
+import { type SyncStatus, useCloudSync } from "@/lib/editor/cloud";
 import { ResumePreview } from "@/components/resume-preview";
 import { useDebounced, useEditorHydration, useRenderRequest } from "@/lib/editor/hooks";
 import { useEditor } from "@/lib/editor/store";
@@ -133,7 +135,7 @@ function ResetButton() {
     );
   return (
     <div role="alertdialog" aria-label="Confirmer l'effacement" className="anim-pop flex flex-wrap items-center gap-2 rounded-xl bg-red-50 p-3 text-sm">
-      <span className="flex-1">Effacer tout le CV de cet appareil ? C&apos;est définitif.</span>
+      <span className="flex-1">Effacer tout le contenu de votre CV ? C&apos;est définitif.</span>
       <button type="button" onClick={() => setConfirm(false)} className="h-10 rounded-lg px-3 font-medium hover:bg-white">
         Annuler
       </button>
@@ -158,12 +160,44 @@ const TABS: { id: Tab; label: string; icon: typeof PenLine; mobileOnly?: boolean
   { id: "apercu", label: "Aperçu", icon: Eye, mobileOnly: true },
 ];
 
+// État de l'enregistrement dans le compte, affiché dans l'en-tête.
+function SaveStatus({ status }: { status: SyncStatus }) {
+  const map: Record<SyncStatus, { icon: React.ReactNode; text: string; tone: string }> = {
+    chargement: { icon: <Loader2 className="size-3.5 animate-spin" aria-hidden />, text: "Chargement…", tone: "text-ink-soft" },
+    enregistrement: { icon: <Loader2 className="size-3.5 animate-spin" aria-hidden />, text: "Enregistrement…", tone: "text-ink-soft" },
+    enregistre: { icon: <Check className="size-3.5" aria-hidden />, text: "Enregistré dans votre compte", tone: "text-accent" },
+    "hors-ligne": { icon: <CloudOff className="size-3.5" aria-hidden />, text: "Hors connexion : gardé sur cet appareil", tone: "text-amber-800" },
+    erreur: { icon: <TriangleAlert className="size-3.5" aria-hidden />, text: "Échec de l'enregistrement, nouvel essai…", tone: "text-red-800" },
+  };
+  const s = map[status];
+  return (
+    <p role="status" aria-live="polite" className={`flex min-w-0 items-center gap-1.5 text-xs ${s.tone}`}>
+      {s.icon}
+      <span className="truncate max-sm:sr-only">{s.text}</span>
+    </p>
+  );
+}
+
 export function EditorApp() {
-  const ready = useEditorHydration();
+  const hydrated = useEditorHydration();
+  const { data: session, status: authStatus } = useSession();
+  const uid = authStatus === "authenticated" ? session.user.id : null;
+  const sync = useCloudSync(uid, hydrated);
+  // L'éditeur s'affiche une fois le CV du compte chargé (ou la copie locale si hors ligne).
+  const ready = hydrated && uid !== null && sync !== "chargement";
   const [tab, setTab] = useState<Tab>("contenu");
 
+  // Filet de sécurité (le proxy protège déjà /editeur) : sans session, direction l'inscription.
+  useEffect(() => {
+    if (authStatus === "unauthenticated") {
+      const suite = window.location.pathname + window.location.search;
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+      window.location.assign(`/inscription?suite=${encodeURIComponent(suite)}`);
+    }
+  }, [authStatus]);
+
   // Arrivée depuis la galerie (/editeur?modele=<id>) : on applique le design une fois
-  // le brouillon chargé, puis on nettoie l'adresse.
+  // le CV chargé, puis on nettoie l'adresse.
   useEffect(() => {
     if (!ready) return;
     const url = new URL(window.location.href);
@@ -184,7 +218,7 @@ export function EditorApp() {
   if (!ready) {
     return (
       <div className="anim-fade flex min-h-dvh items-center justify-center text-ink-soft">
-        <Loader2 className="size-5 animate-spin" aria-label="Chargement de votre brouillon" />
+        <Loader2 className="size-5 animate-spin" aria-label="Chargement de votre CV" />
       </div>
     );
   }
@@ -196,8 +230,8 @@ export function EditorApp() {
           <Link href="/" aria-label="CV Pro, accueil" className="shrink-0">
             <Logo />
           </Link>
-          <p className="hidden text-xs text-ink-soft md:block">Enregistré automatiquement sur cet appareil</p>
-          <div className="flex items-center gap-1">
+          <div className="flex min-w-0 items-center gap-1">
+            <SaveStatus status={sync} />
             <AccountLink compact />
             <div className="lg:hidden">
               <DownloadButton compact />

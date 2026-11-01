@@ -30,7 +30,7 @@ export default function ConfidentialitePage() {
         <h1 className="font-display text-4xl font-semibold tracking-tight">Confidentialité</h1>
         <p className="mt-3 text-sm text-ink-soft">Dernière mise à jour : {MISE_A_JOUR}</p>
         <p className="mt-6 text-lg text-ink-soft text-pretty">
-          CV Pro collecte le moins de données possible. Votre CV reste sur votre appareil : il n&apos;est jamais enregistré sur nos serveurs.
+          CV Pro collecte le moins de données possible : votre compte et votre CV, pour que vous puissiez le retrouver. Rien d&apos;autre.
         </p>
 
         <Section title="Qui est responsable">
@@ -46,17 +46,20 @@ export default function ConfidentialitePage() {
         <Section title="Votre CV">
           <ul>
             <li>
-              Le contenu de votre CV et votre photo sont enregistrés <strong>uniquement dans votre navigateur</strong>, sur votre appareil.
+              Le contenu de votre CV, le design choisi et votre photo (si vous en ajoutez une) sont <strong>enregistrés dans votre compte</strong>,
+              pour que vous puissiez le reprendre sur n&apos;importe quel appareil. Une copie est aussi gardée dans votre navigateur, effacée à
+              la déconnexion.
             </li>
+            <li>Votre CV n&apos;est visible que par vous. Il n&apos;est jamais publié, partagé ni réutilisé.</li>
             <li>
-              Quand vous téléchargez le PDF, le contenu est envoyé à notre serveur le temps de fabriquer le fichier, puis aussitôt oublié :
-              rien n&apos;est conservé.
+              Le fichier PDF, lui, n&apos;est pas conservé : il est fabriqué à la demande puis aussitôt oublié par notre serveur.
             </li>
+            <li>Base légale : l&apos;exécution du service que vous demandez. Le CV est supprimé avec votre compte.</li>
           </ul>
         </Section>
 
-        <Section title="Votre compte (facultatif)">
-          <p>Si vous créez un compte, nous conservons :</p>
+        <Section title="Votre compte">
+          <p>Un compte gratuit est nécessaire pour créer un CV. Nous conservons :</p>
           <ul>
             <li>votre adresse e-mail et votre nom, pour vous connecter et vous reconnaître ;</li>
             <li>la date de création du compte.</li>
@@ -84,7 +87,7 @@ export default function ConfidentialitePage() {
 
         <Section title="Cookies et mesure d'audience">
           <ul>
-            <li>Un seul cookie de session, uniquement si vous vous connectez. Il est indispensable et ne sert à rien d&apos;autre.</li>
+            <li>Un seul cookie de session, pour vous garder connecté. Il est indispensable et ne sert à rien d&apos;autre.</li>
             <li>
               La mesure d&apos;audience (Vercel Web Analytics) fonctionne <strong>sans cookie</strong> et sans vous identifier.
             </li>
@@ -98,7 +101,7 @@ export default function ConfidentialitePage() {
               <strong>Vercel</strong> : hébergement du site (serveurs à Paris).
             </li>
             <li>
-              <strong>Supabase</strong> : base de données des comptes (Irlande, Union européenne).
+              <strong>Supabase</strong> : base de données des comptes et des CV (Irlande, Union européenne).
             </li>
             <li>
               <strong>Resend</strong> : envoi des e-mails de connexion (Irlande, Union européenne).

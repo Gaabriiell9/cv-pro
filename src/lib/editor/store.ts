@@ -16,8 +16,9 @@ import {
   type Theme,
 } from "@/lib/resume/schema";
 
-// État de l'éditeur. Pour un visiteur sans compte, tout reste dans SON navigateur
-// (IndexedDB) : rien n'est envoyé au serveur, sauf au moment de générer le PDF.
+// État de l'éditeur. Le CV est enregistré dans le compte (voir useCloudSync) ; une
+// copie locale (IndexedDB), liée au compte, évite toute perte si le réseau coupe.
+// Elle est effacée à la déconnexion.
 
 export function newId(): string {
   return crypto.randomUUID().replace(/-/g, "").slice(0, 16);
@@ -68,9 +69,14 @@ type Data = {
   cvLocale: CvLocale;
   theme: Theme;
   content: ResumeContent;
-  photo: string | null; // data URL recadrée, jamais envoyée sauf pour le PDF
-  updatedAt: number;
+  photo: string | null; // data URL recadrée (JPEG 480 px)
+  updatedAt: number; // dernière modification locale
+  owner: string | null; // compte auquel appartient cette copie locale
+  syncedAt: number; // valeur de updatedAt au dernier enregistrement réussi en base
 };
+
+/** CV tel qu'il est stocké en base. */
+export type CloudCv = Pick<Data, "templateId" | "cvLocale" | "theme" | "content" | "photo">;
 
 type Actions = {
   setBasics: (field: keyof Basics, value: string) => void;
@@ -89,6 +95,12 @@ type Actions = {
   setLocale: (locale: CvLocale) => void;
   setPhoto: (photo: string | null) => void;
   reset: () => void;
+  /** Remplace le brouillon par le CV du compte. */
+  loadCloud: (cv: CloudCv, owner: string) => void;
+  /** Marque la copie locale comme appartenant à ce compte. */
+  claim: (owner: string) => void;
+  /** Note qu'une version a été enregistrée en base. */
+  markSynced: (updatedAt: number) => void;
 };
 
 export type EditorState = Data & Actions;
@@ -101,6 +113,8 @@ function initialData(): Data {
     content: emptyContent(),
     photo: null,
     updatedAt: 0,
+    owner: null,
+    syncedAt: 0,
   };
 }
 
@@ -154,7 +168,25 @@ export const useEditor = create<EditorState>()(
         setTemplate: (templateId) => setState({ templateId, updatedAt: Date.now() }),
         setLocale: (cvLocale) => setState({ cvLocale, updatedAt: Date.now() }),
         setPhoto: (photo) => setState({ photo, updatedAt: Date.now() }),
-        reset: () => setState({ ...initialData(), updatedAt: Date.now() }),
+        reset: () => setState((st) => ({ ...initialData(), owner: st.owner, syncedAt: st.syncedAt, updatedAt: Date.now() })),
+        loadCloud: (cv, owner) => {
+          const now = Date.now();
+          const content = resumeContentSchema.safeParse(cv.content);
+          const theme = themeSchema.safeParse(cv.theme);
+          const photo = cv.photo ? photoDataUrlSchema.safeParse(cv.photo) : null;
+          setState({
+            templateId: cv.templateId,
+            cvLocale: cv.cvLocale,
+            theme: theme.success ? theme.data : DEFAULT_THEME,
+            content: content.success ? content.data : emptyContent(),
+            photo: photo?.success ? photo.data : null,
+            owner,
+            updatedAt: now,
+            syncedAt: now,
+          });
+        },
+        claim: (owner) => setState({ owner }),
+        markSynced: (updatedAt) => setState({ syncedAt: updatedAt }),
       };
     },
     {
@@ -169,6 +201,8 @@ export const useEditor = create<EditorState>()(
         content: st.content,
         photo: st.photo,
         updatedAt: st.updatedAt,
+        owner: st.owner,
+        syncedAt: st.syncedAt,
       }),
       // Un brouillon abîmé ou d'un ancien format ne doit jamais casser l'éditeur.
       merge: (persisted, current) => {
@@ -184,8 +218,16 @@ export const useEditor = create<EditorState>()(
           content: content.success ? content.data : current.content,
           photo: photo?.success ? photo.data : null,
           updatedAt: typeof p.updatedAt === "number" ? p.updatedAt : 0,
+          owner: typeof p.owner === "string" ? p.owner : null,
+          syncedAt: typeof p.syncedAt === "number" ? p.syncedAt : 0,
         };
       },
     },
   ),
 );
+
+/** Efface la copie locale du CV (déconnexion, suppression du compte). */
+export async function clearLocalDraft(): Promise<void> {
+  await useEditor.persist.clearStorage();
+  useEditor.setState({ ...initialData() });
+}

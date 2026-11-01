@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     template: "%s | CV Pro",
   },
   description:
-    "Créez un CV professionnel en quelques minutes, sans inscription. Des designs variés, un export PDF lisible par les logiciels de recrutement, entièrement gratuit.",
+    "Créez un CV professionnel en quelques minutes. Des designs variés, un export PDF lisible par les logiciels de recrutement, et votre CV enregistré dans votre compte. Entièrement gratuit.",
   // Retiré au lancement public.
   robots: { index: false, follow: false },
 };
