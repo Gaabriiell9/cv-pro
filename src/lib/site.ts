@@ -10,3 +10,7 @@ export const LAUNCHED = false;
 // Tant que c'est faux, chaque design est traité comme gratuit (téléchargement
 // compris) et l'interface ne parle ni de Pass ni de badge « Gratuit ».
 export const PAID_ENABLED = false;
+
+// Adresse de contact affichée dans les pages légales (même adresse que l'assistance
+// de l'écran de connexion Google).
+export const CONTACT_EMAIL = "joaofarias115@gmail.com";
