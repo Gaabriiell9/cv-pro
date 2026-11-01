@@ -118,12 +118,13 @@ export default function ConfidentialitePage() {
 
         <Section title="Vos droits">
           <p>
-            Vous pouvez à tout moment consulter, télécharger ou supprimer vos données depuis la page{" "}
+            Vous pouvez à tout moment consulter et supprimer vos données depuis la page{" "}
             <Link href="/compte" className="font-medium text-accent underline underline-offset-4">
               Mon compte
             </Link>{" "}
-            (boutons « Exporter mes données » et « Supprimer mon compte »). Pour tout autre droit (rectification, opposition, limitation),
-            écrivez-nous à l&apos;adresse ci-dessus : nous répondons sous un mois.
+            : vous y modifiez votre CV, le téléchargez en PDF ou supprimez votre compte. Pour recevoir une copie de toutes vos données ou
+            exercer un autre droit (rectification, opposition, limitation), écrivez-nous à l&apos;adresse ci-dessus : nous répondons sous un
+            mois.
           </p>
           <p>
             Si vous estimez que vos droits ne sont pas respectés, vous pouvez saisir la CNIL (
