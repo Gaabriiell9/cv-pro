@@ -70,7 +70,9 @@ a[class*="rounded-xl"]:active {
   outline-offset: 2px;
 }
 
-/* Apparitions : à poser sur un élément qui vient d'être affiché. */
+/* Apparitions : à poser sur un élément qui vient d'être affiché. Toujours en remplissage
+   « backwards » : avec « both », l'animation resterait active et créerait un contexte
+   d'empilement qui enferme les fenêtres posées dedans (z-index inopérant). */
 @keyframes cv-fade-up {
   from {
     opacity: 0;
@@ -95,14 +97,14 @@ a[class*="rounded-xl"]:active {
   }
 }
 .anim-fade-up {
-  animation: cv-fade-up var(--dur-slow) var(--ease-out) both;
+  animation: cv-fade-up var(--dur-slow) var(--ease-out) backwards;
   animation-delay: calc(var(--i, 0) * 60ms);
 }
 .anim-fade {
-  animation: cv-fade var(--dur) var(--ease-out) both;
+  animation: cv-fade var(--dur) var(--ease-out) backwards;
 }
 .anim-pop {
-  animation: cv-pop var(--dur) var(--ease-out) both;
+  animation: cv-pop var(--dur) var(--ease-out) backwards;
 }
 
 /* Bloc repliable : la hauteur s'anime grâce à la grille (0fr vers 1fr). */
