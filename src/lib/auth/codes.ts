@@ -8,8 +8,19 @@ import { prisma } from "@/lib/prisma";
 export const CODE_TTL_MINUTES = 15;
 export const MAX_ATTEMPTS = 5;
 
+export type CodePurpose = "connexion" | "inscription";
+
 export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
+}
+
+/** Nom complet : espaces resserrés, caractères de contrôle retirés, 80 caractères. */
+export function normalizeName(name: string): string {
+  return name
+    .replace(/[\u0000-\u001f\u007f-\u009f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 80);
 }
 
 function secret(): string {
@@ -23,12 +34,21 @@ export function hashCode(email: string, code: string): string {
 }
 
 /** Crée un nouveau code et invalide les précédents non utilisés. */
-export async function createLoginCode(email: string): Promise<string> {
+export async function createLoginCode(
+  email: string,
+  { purpose = "connexion", name = null }: { purpose?: CodePurpose; name?: string | null } = {},
+): Promise<string> {
   const code = randomInt(0, 1_000_000).toString().padStart(6, "0");
   await prisma.$transaction([
     prisma.emailCode.deleteMany({ where: { email, usedAt: null } }),
     prisma.emailCode.create({
-      data: { email, codeHash: hashCode(email, code), expiresAt: new Date(Date.now() + CODE_TTL_MINUTES * 60_000) },
+      data: {
+        email,
+        purpose,
+        name: purpose === "inscription" ? name : null,
+        codeHash: hashCode(email, code),
+        expiresAt: new Date(Date.now() + CODE_TTL_MINUTES * 60_000),
+      },
     }),
   ]);
   // Ménage occasionnel des vieux codes.
@@ -38,7 +58,9 @@ export async function createLoginCode(email: string): Promise<string> {
   return code;
 }
 
-export type VerifyResult = { ok: true } | { ok: false; reason: "invalide" | "expire" | "essais" };
+export type VerifyResult =
+  | { ok: true; purpose: CodePurpose; name: string | null }
+  | { ok: false; reason: "invalide" | "expire" | "essais" };
 
 /** Vérifie le dernier code envoyé à cette adresse et le consomme s'il est bon. */
 export async function verifyLoginCode(email: string, code: string): Promise<VerifyResult> {
@@ -65,5 +87,6 @@ export async function verifyLoginCode(email: string, code: string): Promise<Veri
   }
   // Consommation atomique : si deux requêtes arrivent en même temps, une seule passe.
   const consumed = await prisma.emailCode.updateMany({ where: { id: row.id, usedAt: null }, data: { usedAt: new Date() } });
-  return consumed.count === 1 ? { ok: true } : { ok: false, reason: "invalide" };
+  if (consumed.count !== 1) return { ok: false, reason: "invalide" };
+  return { ok: true, purpose: row.purpose === "inscription" ? "inscription" : "connexion", name: row.name ?? null };
 }

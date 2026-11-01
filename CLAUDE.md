@@ -22,7 +22,11 @@ Projet de GF Web (Gabriel), indépendant de QuickDevis.
   - À la fin d'un pass, rien n'est perdu (CV modifiables et exportables avec les designs gratuits).
   - Checkout Stripe en mode paiement, case de renoncement au droit de rétractation (contenu numérique).
 - **Langues** : interface en français ; contenu du CV en français, anglais ou portugais (titres de section traduits).
-- **Comptes** (choix du 30/10/2026) : sans mot de passe. Code à 6 chiffres envoyé par e-mail à **chaque** connexion (15 min, 5 essais, haché en HMAC avec `NEXTAUTH_SECRET`, usage unique). Le compte est créé à la première connexion réussie. Session JWT de 30 jours.
+- **Comptes** (30/10 et 01/11/2026) : sans mot de passe. Code à 6 chiffres envoyé par e-mail à **chaque** connexion (15 min, 5 essais, haché en HMAC avec `NEXTAUTH_SECRET`, usage unique). Session JWT de 30 jours.
+  - **Inscription** (`/inscription`) : nom complet + e-mail, puis code. Le nom est gardé sur le code (`EmailCode.name`, `purpose = "inscription"`) et recopié sur `User.name` à la validation. Adresse déjà inscrite : 409 avec lien « Se connecter ».
+  - **Connexion** (`/connexion`) : réservée aux comptes existants (adresse inconnue : 404 avec lien « Créer un compte »). Choix assumé : on dit si une adresse a un compte (les limites de débit passent avant ce contrôle).
+  - **Google** : `GoogleProvider` (PKCE + state, `prompt=select_account`), actif seulement si `GOOGLE_CLIENT_ID` et `GOOGLE_CLIENT_SECRET` sont réglés dans Vercel (le bouton n'apparaît qu'alors, valeur lue au build : redéployer après les avoir ajoutés). Seule une adresse vérifiée par Google est acceptée ; même adresse = même compte que le code e-mail. Nom repris de Google si vide, aucune photo conservée. URI de redirection : `https://cv-pro.gf-web.fr/api/auth/callback/google`.
+  - L'e-mail d'inscription ne reprend que les lettres du prénom (aucun lien injectable).
 - **Bouton « Tenir sur une page »** : réduit espacements puis taille du texte, dans des limites lisibles.
 
 ## Architecture

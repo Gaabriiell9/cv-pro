@@ -16,6 +16,7 @@ datasource db {
 model User {
   id               String        @id @default(cuid())
   email            String        @unique
+  name             String? // nom complet saisi à l'inscription (ou fourni par Google)
   emailVerifiedAt  DateTime?
   locale           String        @default("fr")
   createdAt        DateTime      @default(now())
@@ -26,9 +27,13 @@ model User {
 }
 
 // Code de connexion (valable 15 minutes, 5 essais, stocké haché, usage unique).
+// `purpose` : "connexion" ou "inscription" ; `name` : nom saisi à l'inscription,
+// gardé le temps de la vérification puis recopié sur le compte.
 model EmailCode {
   id        String    @id @default(cuid())
   email     String
+  purpose   String    @default("connexion")
+  name      String?
   codeHash  String
   expiresAt DateTime
   attempts  Int       @default(0)
