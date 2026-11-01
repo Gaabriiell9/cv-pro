@@ -15,6 +15,9 @@ export function SiteFooter() {
           <Link href="/confidentialite" className="hover:text-ink">
             Confidentialité
           </Link>
+          <Link href="/conditions" className="hover:text-ink">
+            Conditions
+          </Link>
         </nav>
       </div>
     </footer>
