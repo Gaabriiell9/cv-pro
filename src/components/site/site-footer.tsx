@@ -12,6 +12,9 @@ export function SiteFooter() {
           <Link href="/editeur" className="hover:text-ink">
             Créer mon CV
           </Link>
+          <Link href="/confidentialite" className="hover:text-ink">
+            Confidentialité
+          </Link>
         </nav>
       </div>
     </footer>
