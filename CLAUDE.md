@@ -13,7 +13,7 @@ Projet de GF Web (Gabriel), indépendant de QuickDevis.
 
 ## Décisions produit (validées le 29/10/2026)
 
-- **Parcours** : CV commencé sans compte, enregistré dans le navigateur (IndexedDB). Compte facultatif pour sauvegarder, dupliquer, adapter.
+- **Parcours** (changé le 01/11/2026) : **compte obligatoire** pour créer un CV. `/editeur` est protégé par `src/proxy.ts` (sans session : `/inscription?suite=<adresse d'origine>`). Le CV est enregistré dans le compte (table `Resume`, un CV par compte pour l'instant) et retrouvé à chaque connexion, sur tout appareil.
 - **Gratuit pour l'instant** (décision du 30/10/2026) : tout le site est gratuit, les 18 designs compris. Interrupteur `PAID_ENABLED = false` dans `src/lib/site.ts` : tant qu'il est faux, `TEMPLATES` marque chaque design `free: true` et l'interface n'affiche ni Pass ni badge « Gratuit ». Le champ `free` de chaque design décrit l'offre future (6 gratuits) ; les offres ci-dessous restent le plan si le payant est réactivé.
 - **Designs** : 18 au lancement. Si le payant revient : 6 gratuits, badge « payant » visible dès le choix du design (jamais de mur payant surprise).
 - **Offres** : paiement unique, **aucun renouvellement** :
@@ -47,7 +47,8 @@ Projet de GF Web (Gabriel), indépendant de QuickDevis.
 - **Polices** : uniquement des polices libres auto-hébergées. Le site utilise les fichiers variables (`public/fonts/*.woff2` via `next/font/local`). Les CV utilisent des fichiers **statiques par graisse** (`public/fonts/cv/`, 400, 400 italique, 600, 700) : les polices variables seraient intégrées au PDF en Type 3, mal lu par les ATS. Jamais de CDN Google Fonts.
 - **Test ATS** : `CHROME_PATH=<chrome> npm run ats` génère le PDF du CV fictif (avec photo) pour chaque design et vérifie : nom lu en premier, chaque bloc dans l'ordre, blocs non mélangés, 1 page, aucune police Type 3. Lecture « flux » (`pdftotext -raw`) obligatoire pour tous ; lecture « par position » obligatoire seulement pour les designs `atsOptimized` (les 2 colonnes y mélangent les colonnes : limite connue, d'où l'absence de badge). Le badge « Optimisé ATS » n'est donné qu'aux designs qui passent les deux.
 - **Vignettes** : `CHROME_PATH=<chrome> npm run thumbs` régénère `public/modeles/<id>.webp` (480 px) et `<id>-grand.webp` (1000 px). À relancer après toute modification d'un design. Photo d'exemple : `public/exemple/photo-fictive.jpg` (illustration, aucune vraie personne), montrée sur les familles moderne, photo et créatif.
-- **Photos** : bucket Supabase Storage privé, URL signées courtes, supprimées avec le CV ou le compte.
+- **Photos** : enregistrées avec le CV dans `Resume.photo` (data URL JPEG 480 px recadrée dans le navigateur, environ 50 Ko, validée par `photoDataUrlSchema`), supprimées avec le CV ou le compte. `photoKey` est réservé à un éventuel passage vers un bucket privé.
+- **Enregistrement du CV** : `GET/PUT /api/cv` (propriétaire uniquement, `rejectForeignRequest`, 1,2 Mo maximum, 600 enregistrements par 10 min et par compte). Côté client, `useCloudSync` (`src/lib/editor/cloud.ts`) : charge le CV du compte à l'ouverture, enregistre 1,2 s après chaque modification, renvoie à la fermeture de l'onglet (`keepalive`), réessaie hors ligne. La copie locale IndexedDB porte `owner` (compte) et `syncedAt` : une copie d'un autre compte n'est jamais affichée ni envoyée, et `clearLocalDraft()` l'efface à la déconnexion et à la suppression du compte. Modifications locales non envoyées du même compte : elles gagnent sur la base (dernier enregistrement l'emporte).
 - **Limitation de débit** : table `RateLimit` (fenêtre fixe) dans Postgres.
 
 ## Infrastructure
@@ -85,7 +86,7 @@ Projet de GF Web (Gabriel), indépendant de QuickDevis.
 
 ## RGPD et CNIL
 
-- Ne stocker que le nécessaire. Rien côté serveur pour les visiteurs anonymes.
+- Ne stocker que le nécessaire : compte (e-mail, nom) et CV (photo comprise). Le PDF n'est jamais conservé.
 - Export des données et suppression complète du compte (CV, photos, droits) depuis `/compte`.
 - Aucun cookie non essentiel. Mesure d'audience sans cookie (Vercel Web Analytics).
 - Pages : mentions légales, CGU/CGV, confidentialité.
@@ -110,4 +111,5 @@ Projet de GF Web (Gabriel), indépendant de QuickDevis.
 - Étape 5a (faite) : connexion par code (`/connexion`, `src/lib/auth/`, `/api/auth/code`, NextAuth fournisseur `code`), `/compte` (déconnexion, export JSON `/api/compte/export`, suppression `DELETE /api/compte` avec saisie de l'e-mail), `src/proxy.ts` protège `/compte`. Logo (`src/app/icon.svg`, `favicon.ico`, `apple-icon.png`, composant `src/components/site/logo.tsx`) dans les en-têtes et l'onglet.
   - `secureCookie` du proxy : vrai dès que `NEXTAUTH_URL` est en https (ou absent, cas des prévisualisations Vercel), comme NextAuth.
 - Connexion épurée (30/10/2026) : `/connexion` ne montre que l'adresse e-mail et un lien « Créer un compte » vers `/inscription` (même composant `LoginForm`, `mode="inscription"`). Aucune explication du mécanisme par code à l'écran.
-- Étape 5b : « Mes CV » enregistrés dans le compte (2 en gratuit), photos dans Supabase Storage, puis paiement du Pass.
+- Étape 5b (faite le 01/11/2026) : compte obligatoire, CV enregistré dans le compte et rechargé à la connexion, statut d'enregistrement dans l'en-tête de l'éditeur, « Mon CV » dans `/compte`. Pages `/confidentialite` et `/conditions`. Connexion Google configurée (projet Google Cloud `cv-pro`, application publiée sans logo pour éviter la validation).
+- Suite possible : plusieurs CV par compte (dupliquer, adapter), pré-remplir le nom du CV avec celui du compte.

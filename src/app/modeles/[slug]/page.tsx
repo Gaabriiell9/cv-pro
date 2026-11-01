@@ -55,7 +55,7 @@ export default async function ModelePage({ params }: { params: Promise<{ slug: s
               <li>Format A4, PDF au texte sélectionnable</li>
               <li>{t.columns === 1 ? "Une colonne : lecture parfaite par les logiciels de recrutement" : "Deux colonnes : idéal pour un envoi direct"}</li>
               <li>Couleur, police, espacement et photo réglables</li>
-              <li>Gratuit, sans filigrane, sans inscription</li>
+              <li>Gratuit, sans filigrane</li>
             </ul>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link

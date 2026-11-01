@@ -15,7 +15,7 @@ export async function GET() {
       locale: true,
       createdAt: true,
       resumes: {
-        select: { title: true, cvLocale: true, templateId: true, theme: true, content: true, createdAt: true, updatedAt: true },
+        select: { title: true, cvLocale: true, templateId: true, theme: true, content: true, photo: true, createdAt: true, updatedAt: true },
         orderBy: { createdAt: "asc" },
       },
       entitlements: {
