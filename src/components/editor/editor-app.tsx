@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, CloudOff, Download, Eye, Loader2, Lock, Palette, PenLine, TriangleAlert, X } from "lucide-react";
+import { Check, CloudOff, Download, Eye, Loader2, Lock, Minimize2, Palette, PenLine, TriangleAlert, X } from "lucide-react";
 import { AccountLink } from "@/components/site/account-link";
 import { Logo } from "@/components/site/logo";
 import Link from "next/link";
@@ -11,7 +11,8 @@ import { ResumePreview } from "@/components/resume-preview";
 import { useDebounced, useEditorHydration, useRenderRequest } from "@/lib/editor/hooks";
 import { useEditor } from "@/lib/editor/store";
 import { downloadResumePdf } from "@/lib/resume/download";
-import { renderRequestSchema, type ResumeContent } from "@/lib/resume/schema";
+import { fitOnePage } from "@/lib/resume/fit";
+import { renderRequestSchema, type RenderRequest, type ResumeContent, type Theme } from "@/lib/resume/schema";
 import { getTemplate, TEMPLATES } from "@/templates";
 import { BasicsForm } from "./basics-form";
 import { DesignPanel } from "./design-panel";
@@ -109,12 +110,78 @@ function PassInfo({ templateName, onClose }: { templateName: string; onClose: ()
   );
 }
 
+// Nombre de pages et bouton « Tenir sur une page », au-dessus de l'aperçu.
+function PageBar({ pages, request }: { pages: number; request: RenderRequest }) {
+  const setTheme = useEditor((s) => s.setTheme);
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<{ text: string; undo?: Theme } | null>(null);
+
+  async function fit() {
+    setBusy(true);
+    setNote(null);
+    const before = request.theme;
+    const res = await fitOnePage(request);
+    setBusy(false);
+    if (res.ok) {
+      setTheme({ density: res.theme.density, scale: res.theme.scale });
+      const pct = Math.round((res.theme.scale ?? 1) * 100);
+      setNote({ text: `Ajusté : espacement serré${pct < 100 ? `, texte à ${pct} %` : ""}.`, undo: before });
+    } else {
+      setNote({ text: `Même resserré au maximum, votre CV fait ${res.pages} pages. Raccourcissez quelques descriptions pour gagner de la place.` });
+    }
+  }
+
+  return (
+    <div className="mb-3 grid grid-cols-1 gap-2">
+      <div className="flex min-h-9 flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-ink-soft" aria-live="polite">
+          <span className="font-semibold text-ink">{pages}</span> {pages > 1 ? "pages" : "page"}
+          {pages > 1 ? <span className="max-sm:hidden"> · un recruteur lit souvent une seule page</span> : null}
+        </p>
+        {pages > 1 ? (
+          <button
+            type="button"
+            onClick={() => void fit()}
+            disabled={busy}
+            className="inline-flex h-9 items-center gap-1.5 rounded-full border border-line bg-white px-3.5 text-sm font-semibold hover:border-accent disabled:opacity-60"
+          >
+            {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Minimize2 className="size-4" aria-hidden />}
+            Tenir sur une page
+          </button>
+        ) : null}
+      </div>
+      {note ? (
+        <p role="status" className="anim-pop flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl bg-paper-2 px-3 py-2 text-sm">
+          <span className="min-w-0 flex-1">{note.text}</span>
+          {note.undo ? (
+            <button
+              type="button"
+              onClick={() => {
+                setTheme({ density: note.undo!.density, scale: note.undo!.scale });
+                setNote(null);
+              }}
+              className="font-semibold text-accent underline-offset-4 hover:underline"
+            >
+              Annuler
+            </button>
+          ) : null}
+          <button type="button" onClick={() => setNote(null)} aria-label="Fermer" className="-mr-1 inline-flex size-7 items-center justify-center rounded-md text-ink-soft hover:bg-white">
+            <X className="size-3.5" aria-hidden />
+          </button>
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 function Preview() {
   const request = useDebounced(useRenderRequest());
   const empty = isEmpty(request.content);
+  const [pages, setPages] = useState(1);
   return (
     <div className="relative">
-      <ResumePreview request={request} label="Aperçu de votre CV" />
+      {!empty ? <PageBar pages={pages} request={request} /> : null}
+      <ResumePreview request={request} label="Aperçu de votre CV" onPages={setPages} />
       {empty ? (
         <div className="anim-fade pointer-events-none absolute inset-x-6 top-16 rounded-xl bg-paper/95 p-4 text-center text-sm text-ink-soft shadow-sm">
           Votre CV apparaîtra ici au fur et à mesure de la saisie.

@@ -3,7 +3,7 @@
 import { PAID_ENABLED } from "@/lib/site";
 import { Check } from "lucide-react";
 import { useEditor } from "@/lib/editor/store";
-import type { CvLocale, Theme } from "@/lib/resume/schema";
+import { TEXT_SCALES, type CvLocale, type Theme } from "@/lib/resume/schema";
 import { TEMPLATES } from "@/templates";
 
 // Couleurs proposées : toutes assez foncées pour rester lisibles sur fond blanc.
@@ -145,6 +145,12 @@ export function DesignPanel() {
             { value: "normal", label: "Normal" },
             { value: "aere", label: "Aéré" },
           ]}
+        />
+        <Choice
+          legend="Taille du texte"
+          value={String(theme.scale ?? 1)}
+          onChange={(v) => setTheme({ scale: Number(v) })}
+          options={TEXT_SCALES.map((sc) => ({ value: String(sc), label: sc === 1 ? "Normale" : `${Math.round(sc * 100)} %` }))}
         />
         <Choice
           legend="Forme de la photo"

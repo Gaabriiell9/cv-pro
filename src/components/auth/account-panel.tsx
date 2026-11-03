@@ -119,6 +119,7 @@ function CvCard({ cv }: { cv: StoredCv }) {
   const { done, total } = completion(cv.content);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pages, setPages] = useState(1);
 
   async function download() {
     setError(null);
@@ -141,7 +142,7 @@ function CvCard({ cv }: { cv: StoredCv }) {
         className="group mx-auto block w-full max-w-[11rem] overflow-hidden sm:max-w-[13rem] rounded-md shadow-[0_14px_40px_-16px_rgba(28,27,25,0.4)] ring-1 ring-line/70 transition-transform duration-300 hover:-translate-y-1"
       >
         <div className="pointer-events-none">
-          <ResumePreview request={request} label="Miniature de votre CV" />
+          <ResumePreview request={request} label="Miniature de votre CV" maxPages={1} onPages={setPages} />
         </div>
       </Link>
 
@@ -152,7 +153,7 @@ function CvCard({ cv }: { cv: StoredCv }) {
         </h2>
         <p className="mt-1 text-sm text-ink-soft">
           {cv.content.basics.jobTitle ? `${cv.content.basics.jobTitle} · ` : ""}
-          Modèle {template?.name ?? cv.templateId} · modifié {since(cv.updatedAt)}
+          Modèle {template?.name ?? cv.templateId} · {pages} {pages > 1 ? "pages" : "page"} · modifié {since(cv.updatedAt)}
         </p>
 
         <div className="mt-5">

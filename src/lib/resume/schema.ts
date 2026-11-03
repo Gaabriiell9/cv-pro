@@ -79,7 +79,13 @@ export const themeSchema = z.object({
   font: z.enum(["instrument", "fraunces"]),
   density: z.enum(["compact", "normal", "aere"]),
   photoShape: z.enum(["round", "square", "none"]),
+  // Taille du texte (1 = normale). Facultative : les CV enregistrés avant n'en ont pas.
+  // 85 % au plus petit, pour rester lisible.
+  scale: z.number().min(0.85).max(1).optional(),
 });
+
+/** Tailles de texte proposées (et essayées par « Tenir sur une page »). */
+export const TEXT_SCALES = [1, 0.95, 0.9, 0.85] as const;
 
 // Photo transmise uniquement au moment du rendu (jamais dans le contenu JSON).
 export const photoDataUrlSchema = z
