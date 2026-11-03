@@ -4,7 +4,7 @@ export function SiteFooter() {
   return (
     <footer className="mt-auto border-t border-line">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 py-6 text-sm text-ink-soft sm:flex-row sm:items-center sm:justify-between sm:px-6">
-        <p>Un service GF Web</p>
+        <p>CV Pro, créez un beau CV en quelques minutes</p>
         <nav aria-label="Liens du pied de page" className="flex flex-wrap gap-x-5 gap-y-2">
           <Link href="/modeles" className="hover:text-ink">
             Modèles de CV
@@ -19,6 +19,13 @@ export function SiteFooter() {
             Conditions
           </Link>
         </nav>
+      </div>
+      {/* Signature, tout en bas du site. */}
+      <div className="border-t border-line/60 py-4 text-center text-xs text-ink-soft">
+        Par{" "}
+        <a href="https://gf-web.fr" target="_blank" rel="noopener" className="font-semibold text-ink hover:text-accent">
+          gf-web.fr
+        </a>
       </div>
     </footer>
   );
