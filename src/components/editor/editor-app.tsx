@@ -235,6 +235,7 @@ function SaveStatus({ status }: { status: SyncStatus }) {
     enregistre: { icon: <Check className="size-3.5" aria-hidden />, text: "Enregistré dans votre compte", tone: "text-accent" },
     "hors-ligne": { icon: <CloudOff className="size-3.5" aria-hidden />, text: "Hors connexion : gardé sur cet appareil", tone: "text-amber-800" },
     erreur: { icon: <TriangleAlert className="size-3.5" aria-hidden />, text: "Échec de l'enregistrement, nouvel essai…", tone: "text-red-800" },
+    limite: { icon: <TriangleAlert className="size-3.5" aria-hidden />, text: "Limite de CV atteinte : non enregistré", tone: "text-red-800" },
   };
   const s = map[status];
   return (

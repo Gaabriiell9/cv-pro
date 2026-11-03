@@ -10,6 +10,11 @@ import { getTemplate } from "@/templates";
 // premier réglage qui fait tenir le CV sur une page. Chaque essai est mesuré dans une
 // iframe invisible, avec la même mise en pages que l'aperçu et le PDF.
 
+// Marge de sécurité : un CV « juste à la limite » dans ce navigateur peut déborder d'un
+// pixel dans un autre (Firefox, Safari mesurent le texte un peu différemment de
+// Chromium, qui fabrique le PDF) et passer à 2 pages. On garde donc une ligne de jeu.
+const SAFETY_PX = 16;
+
 async function countPages(request: RenderRequest): Promise<number> {
   const template = getTemplate(request.templateId);
   if (!template) return 1;
@@ -25,7 +30,9 @@ async function countPages(request: RenderRequest): Promise<number> {
     await loaded;
     const d = frame.contentDocument!;
     await d.fonts.ready;
-    return paginateResume(d).pages;
+    const { pages, pageHeight, end } = paginateResume(d);
+    // Une seule page, mais sans la marge de sécurité : compté comme deux.
+    return pages === 1 && end > pageHeight - SAFETY_PX ? 2 : pages;
   } finally {
     frame.remove();
   }

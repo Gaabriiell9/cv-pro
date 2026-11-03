@@ -1,17 +1,19 @@
 "use client";
 
-import { ArrowRight, Download, LayoutTemplate, Loader2, LogOut, PenLine, Sparkles } from "lucide-react";
+import { Copy, Download, LayoutTemplate, Loader2, LogOut, PenLine, Plus, Sparkles, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
 import { useEffect, useMemo, useState } from "react";
 import { ResumePreview } from "@/components/resume-preview";
 import { Collapse } from "@/components/ui/collapse";
-import { clearLocalDraft } from "@/lib/editor/store";
+import { clearLocalDraft, useEditor } from "@/lib/editor/store";
 import { downloadResumePdf } from "@/lib/resume/download";
 import { renderRequestSchema, type RenderRequest, type ResumeContent } from "@/lib/resume/schema";
 import { getTemplate, TEMPLATES } from "@/templates";
 
-type StoredCv = Omit<RenderRequest, "photo"> & { photo: string | null; updatedAt: string };
+type StoredCv = Omit<RenderRequest, "photo"> & { id: string; photo: string | null; updatedAt: string };
+
+const MAX_CVS = 10; // même limite que le serveur (src/lib/resume/cv-store.ts)
 
 const primary =
   "inline-flex h-11 items-center justify-center gap-2 rounded-full bg-accent px-5 text-sm font-semibold text-accent-ink hover:opacity-90 disabled:opacity-60";
@@ -54,16 +56,60 @@ export function AccountPanel() {
   const email = data?.user?.email ?? "";
   const name = data?.user?.name ?? "";
   const firstName = name.split(" ")[0];
-  // undefined : chargement ; null : aucun CV.
-  const [cv, setCv] = useState<StoredCv | null | undefined>(undefined);
+  // undefined : chargement.
+  const [cvs, setCvs] = useState<StoredCv[] | undefined>(undefined);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (status !== "authenticated") return;
     fetch("/api/cv", { credentials: "include", cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : { cv: null }))
-      .then((d: { cv: StoredCv | null }) => setCv(d.cv))
-      .catch(() => setCv(null));
+      .then((r) => (r.ok ? r.json() : { cvs: [] }))
+      .then((d: { cvs: StoredCv[] }) => setCvs(d.cvs))
+      .catch(() => setCvs([]));
   }, [status]);
+
+  async function duplicate(id: string) {
+    setError(null);
+    try {
+      const res = await fetch("/api/cv", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ copyOf: id }),
+      });
+      const body = (await res.json().catch(() => ({}))) as { cv?: StoredCv; error?: string };
+      if (!res.ok || !body.cv) return setError(body.error ?? "La copie a échoué. Réessayez.");
+      setCvs((list) => [body.cv!, ...(list ?? [])]);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch {
+      setError("Connexion au serveur impossible. Vérifiez votre réseau.");
+    }
+  }
+
+  async function remove(id: string): Promise<boolean> {
+    setError(null);
+    try {
+      const res = await fetch(`/api/cv/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+      });
+      if (!res.ok && res.status !== 404) {
+        setError("La suppression a échoué. Réessayez.");
+        return false;
+      }
+      // La copie locale de ce CV (s'il était ouvert sur cet appareil) part avec lui.
+      // (la copie locale n'est pas chargée sur cette page : on la relit d'abord).
+      await useEditor.persist.rehydrate();
+      if (useEditor.getState().cvId === id) await clearLocalDraft().catch(() => {});
+      setCvs((list) => (list ?? []).filter((c) => c.id !== id));
+      return true;
+    } catch {
+      setError("Connexion au serveur impossible. Vérifiez votre réseau.");
+      return false;
+    }
+  }
 
   async function logout() {
     // La copie locale du CV est effacée de cet appareil.
@@ -94,12 +140,41 @@ export function AccountPanel() {
         </button>
       </header>
 
-      {cv === undefined ? (
+      {cvs === undefined ? (
         <div className="flex h-72 items-center justify-center rounded-3xl border border-line bg-white">
-          <Loader2 className="size-5 animate-spin text-ink-soft" aria-label="Chargement de votre CV" />
+          <Loader2 className="size-5 animate-spin text-ink-soft" aria-label="Chargement de vos CV" />
         </div>
-      ) : cv ? (
-        <CvCard cv={cv} />
+      ) : cvs.length > 0 ? (
+        <section aria-labelledby="titre-mes-cv" className="grid grid-cols-1 gap-4">
+          <div className="anim-fade-up flex flex-wrap items-center justify-between gap-3">
+            <h2 id="titre-mes-cv" className="font-display text-2xl font-semibold">
+              Mes CV <span className="text-base font-normal text-ink-soft">({cvs.length})</span>
+            </h2>
+            {cvs.length < MAX_CVS ? (
+              <Link href="/editeur?cv=nouveau" className={primary}>
+                <Plus className="size-4" aria-hidden />
+                Nouveau CV
+              </Link>
+            ) : (
+              <p className="text-sm text-ink-soft">Limite de {MAX_CVS} CV atteinte</p>
+            )}
+          </div>
+          {error ? (
+            <p role="alert" className="anim-pop rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800">
+              {error}
+            </p>
+          ) : null}
+          {cvs.map((cv, i) => (
+            <CvCard
+              key={cv.id}
+              cv={cv}
+              index={i}
+              canCopy={cvs.length < MAX_CVS}
+              onCopy={() => duplicate(cv.id)}
+              onDelete={() => remove(cv.id)}
+            />
+          ))}
+        </section>
       ) : (
         <EmptyCard />
       )}
@@ -109,7 +184,19 @@ export function AccountPanel() {
   );
 }
 
-function CvCard({ cv }: { cv: StoredCv }) {
+function CvCard({
+  cv,
+  index,
+  canCopy,
+  onCopy,
+  onDelete,
+}: {
+  cv: StoredCv;
+  index: number;
+  canCopy: boolean;
+  onCopy: () => Promise<void>;
+  onDelete: () => Promise<boolean>;
+}) {
   const request = useMemo<RenderRequest>(
     () => ({ templateId: cv.templateId, cvLocale: cv.cvLocale, theme: cv.theme, content: cv.content, photo: cv.photo ?? undefined }),
     [cv],
@@ -120,6 +207,12 @@ function CvCard({ cv }: { cv: StoredCv }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pages, setPages] = useState(1);
+  const [copying, setCopying] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const href = `/editeur?cv=${cv.id}`;
+  const titleId = `titre-cv-${cv.id}`;
+  const heading = cv.content.basics.jobTitle || fullName || "CV sans titre";
 
   async function download() {
     setError(null);
@@ -132,13 +225,13 @@ function CvCard({ cv }: { cv: StoredCv }) {
 
   return (
     <section
-      aria-labelledby="titre-cv"
+      aria-labelledby={titleId}
       className="anim-fade-up grid grid-cols-1 gap-6 rounded-3xl border border-line bg-white p-5 sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)] sm:p-7"
-      style={{ "--i": 1 } as React.CSSProperties}
+      style={{ "--i": Math.min(index + 1, 4) } as React.CSSProperties}
     >
       <Link
-        href="/editeur"
-        aria-label="Ouvrir mon CV"
+        href={href}
+        aria-label={`Ouvrir le CV « ${heading} »`}
         className="group mx-auto block w-full max-w-[11rem] overflow-hidden sm:max-w-[13rem] rounded-md shadow-[0_14px_40px_-16px_rgba(28,27,25,0.4)] ring-1 ring-line/70 transition-transform duration-300 hover:-translate-y-1"
       >
         <div className="pointer-events-none">
@@ -147,12 +240,11 @@ function CvCard({ cv }: { cv: StoredCv }) {
       </Link>
 
       <div className="flex min-w-0 flex-col">
-        <p className="text-xs font-semibold uppercase text-accent">Mon CV</p>
-        <h2 id="titre-cv" className="mt-1 truncate font-display text-2xl font-semibold">
-          {fullName || "CV sans nom"}
-        </h2>
+        {fullName ? <p className="truncate text-xs font-semibold uppercase text-accent">{fullName}</p> : null}
+        <h3 id={titleId} className="mt-1 font-display text-xl font-semibold text-pretty sm:text-2xl">
+          {heading}
+        </h3>
         <p className="mt-1 text-sm text-ink-soft">
-          {cv.content.basics.jobTitle ? `${cv.content.basics.jobTitle} · ` : ""}
           Modèle {template?.name ?? cv.templateId} · {pages} {pages > 1 ? "pages" : "page"} · modifié {since(cv.updatedAt)}
         </p>
 
@@ -169,13 +261,13 @@ function CvCard({ cv }: { cv: StoredCv }) {
         </div>
 
         <div className="mt-6 flex flex-wrap gap-2">
-          <Link href="/editeur" className={primary}>
+          <Link href={href} className={primary}>
             <PenLine className="size-4" aria-hidden />
-            Reprendre mon CV
+            Modifier
           </Link>
           <button type="button" onClick={() => void download()} disabled={busy} className={secondary}>
             {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Download className="size-4" aria-hidden />}
-            Télécharger le PDF
+            PDF
           </button>
         </div>
         {error ? (
@@ -184,11 +276,53 @@ function CvCard({ cv }: { cv: StoredCv }) {
           </p>
         ) : null}
 
-        <Link href="/modeles" className="mt-auto inline-flex items-center gap-1.5 pt-6 text-sm font-medium text-ink-soft hover:text-accent">
-          <LayoutTemplate className="size-4" aria-hidden />
-          Essayer un autre modèle
-          <ArrowRight className="size-3.5" aria-hidden />
-        </Link>
+        <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 pt-5 text-sm">
+          {canCopy ? (
+            <button
+              type="button"
+              disabled={copying}
+              onClick={async () => {
+                setCopying(true);
+                await onCopy();
+                setCopying(false);
+              }}
+              className="inline-flex h-10 items-center gap-1.5 font-medium text-ink-soft hover:text-accent disabled:opacity-60"
+            >
+              {copying ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Copy className="size-4" aria-hidden />}
+              Dupliquer
+            </button>
+          ) : null}
+          <button
+            type="button"
+            aria-expanded={confirmDelete}
+            onClick={() => setConfirmDelete((v) => !v)}
+            className="inline-flex h-10 items-center gap-1.5 font-medium text-ink-soft hover:text-red-800"
+          >
+            <Trash2 className="size-4" aria-hidden />
+            Supprimer
+          </button>
+        </div>
+        <Collapse open={confirmDelete}>
+          <div role="alertdialog" aria-label="Confirmer la suppression" className="mt-2 flex flex-wrap items-center gap-2 rounded-xl bg-red-50 p-3 text-sm">
+            <span className="min-w-0 flex-1">Supprimer ce CV ? C&apos;est définitif.</span>
+            <button type="button" onClick={() => setConfirmDelete(false)} className="h-10 rounded-lg px-3 font-medium hover:bg-white">
+              Annuler
+            </button>
+            <button
+              type="button"
+              disabled={deleting}
+              onClick={async () => {
+                setDeleting(true);
+                const ok = await onDelete();
+                if (!ok) setDeleting(false);
+              }}
+              className="inline-flex h-10 items-center gap-2 rounded-lg bg-red-800 px-3 font-medium text-white disabled:opacity-60"
+            >
+              {deleting ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
+              Supprimer
+            </button>
+          </div>
+        </Collapse>
       </div>
     </section>
   );
@@ -222,7 +356,7 @@ function EmptyCard() {
           Quelques minutes suffisent. Il sera enregistré dans votre compte, et vous pourrez changer de modèle à tout moment.
         </p>
         <div className="mt-5 flex flex-wrap justify-center gap-2">
-          <Link href="/editeur" className={primary}>
+          <Link href="/editeur?cv=nouveau" className={primary}>
             <PenLine className="size-4" aria-hidden />
             Créer mon CV
           </Link>
@@ -285,7 +419,7 @@ function DangerZone({ email, onDeleted }: { email: string; onDeleted: () => Prom
           }}
         >
           <p className="text-sm text-ink-soft text-pretty">
-            Votre compte et votre CV (photo comprise) seront effacés définitivement. Pensez à télécharger votre PDF avant.
+            Votre compte et tous vos CV (photos comprises) seront effacés définitivement. Pensez à télécharger vos PDF avant.
           </p>
           <label className="grid grid-cols-1 gap-1.5">
             <span className="text-sm font-medium">Pour confirmer, saisissez votre adresse e-mail</span>

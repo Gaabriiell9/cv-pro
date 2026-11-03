@@ -13,12 +13,13 @@
 // car elle est aussi envoyée telle quelle dans Chromium par les tests
 // (page.evaluate). Elle ne touche qu'à l'aperçu : le PDF est découpé par Chromium.
 
-export type Pagination = { pages: number; pageHeight: number };
+/** `end` : bas réel du contenu (marge basse comprise), en px depuis le haut du document. */
+export type Pagination = { pages: number; pageHeight: number; end: number };
 
 export function paginateResume(doc: Document): Pagination {
   const PAGE = (297 / 25.4) * 96; // hauteur A4 en px CSS (1122,5)
   const win = doc.defaultView;
-  if (!win) return { pages: 1, pageHeight: PAGE };
+  if (!win) return { pages: 1, pageHeight: PAGE, end: 0 };
 
   // On repart d'un document sans cales ni marges ajoutées (nouvel appel).
   doc.querySelectorAll("[data-cv-cale]").forEach((el) => el.remove());
@@ -28,7 +29,7 @@ export function paginateResume(doc: Document): Pagination {
   });
 
   const cv = doc.querySelector<HTMLElement>(".cv");
-  if (!cv) return { pages: 1, pageHeight: PAGE };
+  if (!cv) return { pages: 1, pageHeight: PAGE, end: 0 };
 
   const css = (el: Element) => win.getComputedStyle(el);
   const top = (el: Element) => el.getBoundingClientRect().top + win.scrollY;
@@ -162,5 +163,5 @@ export function paginateResume(doc: Document): Pagination {
   }
   end = Math.max(end, bottom(cv) - 1);
   const pages = Math.max(1, Math.ceil((end - 1) / PAGE));
-  return { pages, pageHeight: PAGE };
+  return { pages, pageHeight: PAGE, end };
 }
