@@ -36,7 +36,7 @@ export function fontFaceCss(source: FontSource): string {
     .join("\n");
 }
 
-const DENSITY = { compact: { d: 0.75, size: "9.4pt" }, normal: { d: 1, size: "10pt" }, aere: { d: 1.25, size: "10.5pt" } };
+const DENSITY = { compact: { d: 0.75, size: 9.4 }, normal: { d: 1, size: 10 }, aere: { d: 1.25, size: 10.5 } };
 
 // CSS commun : format A4, marge d'impression NULLE. Chaque design gère ses marges
 // intérieures avec `box-decoration-break: clone`, ce qui les répète en haut et en bas
@@ -55,7 +55,7 @@ img { display: block; }
 export function renderResumeDocument(template: TemplateDef, req: RenderRequest, fonts: FontSource): string {
   const density = DENSITY[req.theme.density];
   const font = CV_FONTS[req.theme.font];
-  const vars = `:root{--accent:${cssColor(req.theme.accent)};--ink:#1d1d1b;--muted:#55534d;--line:#cfcac0;--d:${density.d};--size:${density.size};--font-body:"${font.family}";--font-title:"${font.family}"}`;
+  const vars = `:root{--accent:${cssColor(req.theme.accent)};--ink:#1d1d1b;--muted:#55534d;--line:#cfcac0;--d:${density.d};--size:${Math.round(density.size * Math.min(1, Math.max(0.85, req.theme.scale ?? 1)) * 100) / 100}pt;--font-body:"${font.family}";--font-title:"${font.family}"}`;
   const body = template.body({
     content: req.content,
     theme: req.theme,
