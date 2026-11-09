@@ -173,7 +173,14 @@ export const useEditor = create<EditorState>()(
         setTheme: (patch) => setState((st) => ({ theme: { ...st.theme, ...patch }, updatedAt: Date.now() })),
         setTemplate: (templateId) => setState({ templateId, updatedAt: Date.now() }),
         setLocale: (cvLocale) => setState({ cvLocale, updatedAt: Date.now() }),
-        setPhoto: (photo) => setState({ photo, updatedAt: Date.now() }),
+        // Ajouter une photo alors que la forme est « Sans photo » : on la rend visible (ronde),
+        // sinon elle serait enregistrée mais absente du CV.
+        setPhoto: (photo) =>
+          setState((st) => ({
+            photo,
+            theme: photo && st.theme.photoShape === "none" ? { ...st.theme, photoShape: "round" } : st.theme,
+            updatedAt: Date.now(),
+          })),
         reset: () => setState((st) => ({ ...initialData(), owner: st.owner, cvId: st.cvId, syncedAt: st.syncedAt, updatedAt: Date.now() })),
         loadCloud: (cv, owner, cvId) => {
           const now = Date.now();

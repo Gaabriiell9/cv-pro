@@ -104,6 +104,8 @@ function CropDialog({ src, onCancel, onDone }: { src: string; onCancel: () => vo
 export function PhotoField() {
   const photo = useEditor((s) => s.photo);
   const setPhoto = useEditor((s) => s.setPhoto);
+  const hidden = useEditor((s) => s.photo !== null && s.theme.photoShape === "none");
+  const setTheme = useEditor((s) => s.setTheme);
   const [source, setSource] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -146,7 +148,16 @@ export function PhotoField() {
             </button>
           ) : null}
         </div>
-        <p className="mt-1 text-xs text-ink-soft">Facultative. Recadrée sur votre appareil, enregistrée avec votre CV.</p>
+        {hidden ? (
+          <p role="status" className="anim-pop mt-1 flex flex-wrap items-center gap-x-2 text-xs text-red-800">
+            Photo masquée : la forme choisie dans Design est « Sans photo ».
+            <button type="button" onClick={() => setTheme({ photoShape: "round" })} className="min-h-8 font-semibold underline underline-offset-2">
+              Afficher la photo
+            </button>
+          </p>
+        ) : (
+          <p className="mt-1 text-xs text-ink-soft">Facultative. Recadrée sur votre appareil, enregistrée avec votre CV.</p>
+        )}
         {error ? (
           <p role="alert" className="mt-1 text-xs text-red-800">
             {error}
