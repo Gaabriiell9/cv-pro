@@ -1,7 +1,7 @@
 import { html, paragraphs, type SafeHtml } from "@/lib/resume/html";
 import { sectionTitle, UI_LABELS } from "@/lib/resume/labels";
 import type { Section, SectionType } from "@/lib/resume/schema";
-import { contactItems, filledItems, formatPeriod, fullName, joinWith, photoTag } from "./shared";
+import { contactItems, filledItems, joinWith, nameHtml, periodHtml, photoTag } from "./shared";
 import type { TemplateDef, TemplateFamily, TemplateInput } from "./types";
 
 // Moteur commun des designs. Tous produisent la MÊME structure HTML, sémantique et
@@ -38,11 +38,22 @@ export type KitConfig = {
 
 const DEFAULT_SIDE: SectionType[] = ["skills", "languages", "interests"];
 
-function itemBlock(title: string, period: string, sub: string, desc: string): SafeHtml {
+// Bloc d'expérience, de formation ou de rubrique libre. `base` repère l'élément
+// (s:<section>:<élément>) : chaque texte porte data-f="<base>:<champ>" pour
+// l'édition directe dans l'aperçu (attributs sans effet sur le PDF et les ATS).
+type Field = { key: string; value: string };
+
+function fieldTag(base: string, f: Field): SafeHtml {
+  return html`<span data-f="${base}:${f.key}">${f.value.trim()}</span>`;
+}
+
+function itemBlock(base: string, title: Field, period: SafeHtml, subs: Field[], desc: Field): SafeHtml {
+  const sub = subs.filter((f) => f.value.trim());
+  const hasPeriod = period.toString() !== "";
   return html`<article class="item">
-    <div class="item-head"><h3 class="item-title">${title}</h3>${period ? html`<span class="item-period">${period}</span>` : ""}</div>
-    ${sub ? html`<p class="item-sub">${sub}</p>` : ""}
-    ${paragraphs(desc)}
+    <div class="item-head"><h3 class="item-title"${title.value.trim() ? html` data-f="${base}:${title.key}"` : ""}>${title.value.trim()}</h3>${hasPeriod ? html`<span class="item-period">${period}</span>` : ""}</div>
+    ${sub.length ? html`<p class="item-sub">${sub.map((f, i) => html`${i > 0 ? ", " : ""}${fieldTag(base, f)}`)}</p>` : ""}
+    ${paragraphs(desc.value, "desc", `${base}:${desc.key}`)}
   </article>`;
 }
 
@@ -56,39 +67,60 @@ export function renderSection(input: TemplateInput, raw: Section): SafeHtml {
   const { locale } = input;
   const s = { ...raw, items: filledItems(raw.items as { id: string }[]) } as Section;
   if (!s.visible || s.items.length === 0) return html``;
-  const title = html`<h2 class="sec-title"><span>${sectionTitle(locale, s.type, s.title)}</span></h2>`;
+  const title = html`<h2 class="sec-title"><span data-f="s:${s.id}:title">${sectionTitle(locale, s.type, s.title)}</span></h2>`;
+  const base = (itemId: string) => `s:${s.id}:${itemId}`;
   const cls = `sec sec-${s.type}`;
 
   switch (s.type) {
     case "experience":
       return html`<section class="${cls}">${title}${s.items.map((it) =>
-        itemBlock(it.role, formatPeriod(locale, it.start, it.end), [it.company, it.city].filter(Boolean).join(", "), it.description),
+        itemBlock(
+          base(it.id),
+          { key: "role", value: it.role },
+          periodHtml(locale, it.start, it.end, base(it.id)),
+          [{ key: "company", value: it.company }, { key: "city", value: it.city }],
+          { key: "description", value: it.description },
+        ),
       )}</section>`;
     case "education":
       return html`<section class="${cls}">${title}${s.items.map((it) =>
-        itemBlock(it.degree, formatPeriod(locale, it.start, it.end), [it.school, it.city].filter(Boolean).join(", "), it.description),
+        itemBlock(
+          base(it.id),
+          { key: "degree", value: it.degree },
+          periodHtml(locale, it.start, it.end, base(it.id)),
+          [{ key: "school", value: it.school }, { key: "city", value: it.city }],
+          { key: "description", value: it.description },
+        ),
       )}</section>`;
     case "custom":
-      return html`<section class="${cls}">${title}${s.items.map((it) => itemBlock(it.title, it.period, it.subtitle, it.description))}</section>`;
+      return html`<section class="${cls}">${title}${s.items.map((it) =>
+        itemBlock(
+          base(it.id),
+          { key: "title", value: it.title },
+          it.period.trim() ? fieldTag(base(it.id), { key: "period", value: it.period }) : html``,
+          [{ key: "subtitle", value: it.subtitle }],
+          { key: "description", value: it.description },
+        ),
+      )}</section>`;
     case "skills":
       return html`<section class="${cls}">${title}<ul class="chips skills">${s.items.map(
-        (it) => html`<li><span class="chip-name">${it.name}</span>${levelMeter(it.level)}</li>`,
+        (it) => html`<li><span class="chip-name" data-f="${base(it.id)}:name">${it.name}</span>${levelMeter(it.level)}</li>`,
       )}</ul></section>`;
     case "interests":
       return html`<section class="${cls}">${title}<ul class="chips interests">${s.items.map(
-        (it) => html`<li><span class="chip-name">${it.name}</span></li>`,
+        (it) => html`<li><span class="chip-name" data-f="${base(it.id)}:name">${it.name}</span></li>`,
       )}</ul></section>`;
     case "languages":
       return html`<section class="${cls}">${title}<ul class="chips langs">${s.items.map(
         (it) =>
-          html`<li><span class="chip-name">${it.name}</span>${it.level ? html`<span class="lang-sep"> : </span><span class="lang-level">${it.level}</span>` : ""}</li>`,
+          html`<li><span class="chip-name" data-f="${base(it.id)}:name">${it.name}</span>${it.level ? html`<span class="lang-sep"> : </span><span class="lang-level" data-f="${base(it.id)}:level">${it.level}</span>` : ""}</li>`,
       )}</ul></section>`;
   }
 }
 
 function profile(input: TemplateInput): SafeHtml {
   if (!input.content.summary.trim()) return html``;
-  return html`<section class="sec sec-profile"><h2 class="sec-title"><span>${UI_LABELS[input.locale].profile}</span></h2>${paragraphs(input.content.summary, "summary")}</section>`;
+  return html`<section class="sec sec-profile"><h2 class="sec-title"><span>${UI_LABELS[input.locale].profile}</span></h2>${paragraphs(input.content.summary, "summary", "summary")}</section>`;
 }
 
 function identity(input: TemplateInput, withContact: boolean): SafeHtml {
@@ -96,8 +128,8 @@ function identity(input: TemplateInput, withContact: boolean): SafeHtml {
   return html`<header class="head">
     ${photoTag(input.photo, input.theme.photoShape)}
     <div class="head-text">
-      <h1 class="name">${fullName(b)}</h1>
-      ${b.jobTitle ? html`<p class="job">${b.jobTitle}</p>` : ""}
+      <h1 class="name">${nameHtml(b)}</h1>
+      ${b.jobTitle ? html`<p class="job" data-f="b:jobTitle">${b.jobTitle}</p>` : ""}
       ${withContact && contactItems(b).length ? html`<p class="contact">${joinWith(contactItems(b), "|")}</p>` : ""}
     </div>
   </header>`;
@@ -107,7 +139,7 @@ function contactBlock(input: TemplateInput): SafeHtml {
   const items = contactItems(input.content.basics);
   if (!items.length) return html``;
   return html`<section class="sec sec-contact"><h2 class="sec-title"><span>${UI_LABELS[input.locale].contact}</span></h2><ul class="contact-list">${items.map(
-    (c) => html`<li>${c}</li>`,
+    (c) => html`<li data-f="b:${c.key}">${c.value}</li>`,
   )}</ul></section>`;
 }
 

@@ -37,11 +37,20 @@ export function html(strings: TemplateStringsArray, ...values: Value[]): SafeHtm
 
 // Texte multiligne : chaque ligne non vide devient un élément de liste si le texte
 // en contient plusieurs, sinon un paragraphe.
-export function paragraphs(text: string, className = "desc"): SafeHtml {
-  const lines = text.split(/\r?\n/).map((l) => l.replace(/^[-•*]\s*/, "").trim()).filter(Boolean);
+/** Lignes affichées d'un texte libre (puces et lignes vides retirées). */
+export function textLines(text: string): string[] {
+  return text.split(/\r?\n/).map((l) => l.replace(/^[-•*]\s*/, "").trim()).filter(Boolean);
+}
+
+/**
+ * Texte libre en paragraphe ou en liste à puces. `field` repère le champ d'origine
+ * (attributs data-f et data-l, ligne par ligne) pour l'édition directe dans l'aperçu.
+ */
+export function paragraphs(text: string, className = "desc", field?: string): SafeHtml {
+  const lines = textLines(text);
   if (lines.length === 0) return html``;
-  if (lines.length === 1) return html`<p class="${className}">${lines[0]}</p>`;
-  return html`<ul class="${className}">${lines.map((l) => html`<li>${l}</li>`)}</ul>`;
+  if (lines.length === 1) return field ? html`<p class="${className}" data-f="${field}" data-l="0">${lines[0]}</p>` : html`<p class="${className}">${lines[0]}</p>`;
+  return html`<ul class="${className}">${lines.map((l, i) => (field ? html`<li data-f="${field}" data-l="${String(i)}">${l}</li>` : html`<li>${l}</li>`))}</ul>`;
 }
 
 // Valeur CSS sûre pour une couleur déjà validée par Zod (#rrggbb).

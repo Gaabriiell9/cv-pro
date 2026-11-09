@@ -1,5 +1,6 @@
 "use client";
 
+import { applyInlineEdit } from "./inline-edit";
 import { del, get, set } from "idb-keyval";
 import { create } from "zustand";
 import { createJSONStorage, persist, type StateStorage } from "zustand/middleware";
@@ -82,6 +83,8 @@ export type CloudCv = Pick<Data, "templateId" | "cvLocale" | "theme" | "content"
 type Actions = {
   setBasics: (field: keyof Basics, value: string) => void;
   setSummary: (value: string) => void;
+  /** Modification faite directement dans l'aperçu (voir inline-edit.ts). */
+  editInline: (field: string, line: number | null, value: string) => void;
   addSection: (type: SectionType) => string;
   removeSection: (sectionId: string) => void;
   moveSection: (from: number, to: number) => void;
@@ -145,6 +148,11 @@ export const useEditor = create<EditorState>()(
         setBasics: (field, value) =>
           setState((st) => ({ content: { ...st.content, basics: { ...st.content.basics, [field]: value } }, updatedAt: Date.now() })),
         setSummary: (value) => setState((st) => ({ content: { ...st.content, summary: value }, updatedAt: Date.now() })),
+        editInline: (field, line, value) =>
+          setState((st) => {
+            const content = applyInlineEdit(st.content, field, line, value);
+            return content ? { content, updatedAt: Date.now() } : {};
+          }),
         addSection: (type) => {
           const section = emptySection(type);
           setState((st) => ({ content: { ...st.content, sections: [...st.content.sections, section] }, updatedAt: Date.now() }));

@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, CloudOff, Download, Eye, Loader2, Lock, Minimize2, Palette, PenLine, TriangleAlert, X } from "lucide-react";
+import { Check, CloudOff, Download, Eye, Loader2, Lock, Minimize2, MousePointerClick, Palette, PenLine, TriangleAlert, X } from "lucide-react";
 import { AccountLink } from "@/components/site/account-link";
 import { Logo } from "@/components/site/logo";
 import Link from "next/link";
@@ -178,10 +178,18 @@ function Preview() {
   const request = useDebounced(useRenderRequest());
   const empty = isEmpty(request.content);
   const [pages, setPages] = useState(1);
+  const editInline = useEditor((s) => s.editInline);
   return (
     <div className="relative">
       {!empty ? <PageBar pages={pages} request={request} /> : null}
-      <ResumePreview request={request} label="Aperçu de votre CV" onPages={setPages} />
+      {!empty ? (
+        <p className="mb-2 flex items-center gap-1.5 text-xs text-ink-soft">
+          <MousePointerClick className="size-3.5 flex-none text-accent" aria-hidden />
+          <span className="sm:hidden">Touchez un texte du CV pour le modifier directement.</span>
+          <span className="hidden sm:inline">Cliquez sur un texte du CV pour le modifier directement. Entrée pour valider, Échap pour annuler.</span>
+        </p>
+      ) : null}
+      <ResumePreview request={request} label="Aperçu de votre CV" onPages={setPages} onEdit={editInline} />
       {empty ? (
         <div className="anim-fade pointer-events-none absolute inset-x-6 top-16 rounded-xl bg-paper/95 p-4 text-center text-sm text-ink-soft shadow-sm">
           Votre CV apparaîtra ici au fur et à mesure de la saisie.

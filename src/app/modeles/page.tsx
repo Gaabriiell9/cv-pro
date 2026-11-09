@@ -6,9 +6,9 @@ import { TEMPLATES } from "@/templates";
 import { FAMILY_LABELS, type TemplateFamily } from "@/templates/types";
 
 export const metadata: Metadata = {
-  title: "Modèles de CV : 18 designs gratuits",
+  title: `Modèles de CV : ${TEMPLATES.length} designs gratuits`,
   description:
-    "Choisissez parmi 18 modèles de CV modernes, sobres, élégants ou créatifs, tous gratuits. Remplissez-le en ligne et téléchargez un PDF prêt à envoyer.",
+    `Choisissez parmi ${TEMPLATES.length} modèles de CV modernes, sobres, élégants ou créatifs, tous gratuits. Remplissez-le en ligne et téléchargez un PDF prêt à envoyer.`,
   alternates: { canonical: "/modeles" },
 };
 

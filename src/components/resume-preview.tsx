@@ -10,6 +10,99 @@ const A4_WIDTH_PX = 793.7; // 210 mm à 96 ppp
 const A4_HEIGHT_PX = (297 / 25.4) * 96; // 297 mm
 const GAP_PX = 12; // bande entre deux feuilles, à l'écran (posée sur les marges vides)
 
+export type InlineEdit = (field: string, line: number | null, value: string) => void;
+
+// Styles d'édition, ajoutés seulement dans l'aperçu (jamais dans le PDF).
+const EDIT_CSS = `
+[data-f] { cursor: text; border-radius: 1.5px; }
+[data-f]:hover { background: rgba(31, 77, 58, 0.1); box-shadow: 0 0 0 1.5px rgba(31, 77, 58, 0.45); }
+[data-f][contenteditable] { background: #fff; color: #1d1d1b; box-shadow: 0 0 0 2px #1f4d3a; outline: none; cursor: text; }
+`;
+
+/**
+ * Rend les textes du CV modifiables sur place : un clic sur un texte le passe en
+ * édition, Entrée ou un clic ailleurs valide, Échap annule. L'iframe n'exécute aucun
+ * script : les écouteurs sont ceux de la page (même origine).
+ */
+function enableEditing(doc: Document, onEdit: () => InlineEdit | undefined) {
+  if (doc.documentElement.dataset.cvEdit) return;
+  doc.documentElement.dataset.cvEdit = "1";
+  const style = doc.createElement("style");
+  style.textContent = EDIT_CSS;
+  doc.head.appendChild(style);
+
+  doc.addEventListener("click", (event) => {
+    const target = event.target as Element | null;
+    const el = target?.closest?.("[data-f]") as HTMLElement | null;
+    if (!el || el.isContentEditable) return;
+    event.preventDefault();
+    const original = el.textContent ?? "";
+    const placeholder = el.dataset.ph === "1";
+    let cancelled = false;
+    try {
+      el.contentEditable = "plaintext-only";
+    } catch {
+      el.contentEditable = "true"; // navigateurs sans « plaintext-only »
+    }
+    el.focus();
+    // Curseur à l'endroit du clic (ou tout le texte s'il s'agit d'un libellé par défaut).
+    const sel = doc.getSelection();
+    if (sel) {
+      let range: Range | null = null;
+      if (!placeholder) {
+        const d = doc as Document & { caretPositionFromPoint?: (x: number, y: number) => { offsetNode: Node; offset: number } | null };
+        const pos = d.caretPositionFromPoint?.(event.clientX, event.clientY);
+        if (pos) {
+          range = doc.createRange();
+          range.setStart(pos.offsetNode, pos.offset);
+        } else {
+          range = doc.caretRangeFromPoint?.(event.clientX, event.clientY) ?? null;
+        }
+      }
+      if (!range || !el.contains(range.startContainer)) {
+        range = doc.createRange();
+        range.selectNodeContents(el);
+      } else {
+        range.collapse(true);
+      }
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        el.blur();
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        cancelled = true;
+        el.blur();
+      }
+    };
+    // Collage : texte brut seulement (utile si « plaintext-only » n'existe pas).
+    const onPaste = (e: ClipboardEvent) => {
+      e.preventDefault();
+      const text = (e.clipboardData?.getData("text/plain") ?? "").replace(/\s+/g, " ");
+      doc.execCommand("insertText", false, text);
+    };
+    const onBlur = () => {
+      el.removeEventListener("keydown", onKey);
+      el.removeEventListener("paste", onPaste);
+      el.removeAttribute("contenteditable");
+      const value = el.textContent ?? "";
+      if (cancelled || value === original) {
+        el.textContent = original;
+        return;
+      }
+      const line = el.dataset.l !== undefined ? Number(el.dataset.l) : null;
+      onEdit()?.(el.dataset.f!, line, value);
+    };
+    el.addEventListener("keydown", onKey);
+    el.addEventListener("paste", onPaste);
+    el.addEventListener("blur", onBlur, { once: true });
+  });
+}
+
 // Aperçu fidèle : le même HTML que le PDF, dans une iframe sans script, mise à l'échelle,
 // et découpé en pages comme le PDF (voir paginateResume). Entre deux pages, une bande
 // couleur papier sépare les feuilles.
@@ -20,6 +113,7 @@ export function ResumePreview({
   label,
   maxPages,
   onPages,
+  onEdit,
 }: {
   request: RenderRequest;
   label: string;
@@ -27,10 +121,16 @@ export function ResumePreview({
   maxPages?: number;
   /** Nombre de pages du CV affiché, à chaque changement. */
   onPages?: (pages: number) => void;
+  /** Rend les textes modifiables d'un clic dans l'aperçu. */
+  onEdit?: InlineEdit;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const frames = [useRef<HTMLIFrameElement>(null), useRef<HTMLIFrameElement>(null)];
   const [scale, setScale] = useState(0.4);
+  const editRef = useRef(onEdit);
+  useEffect(() => {
+    editRef.current = onEdit;
+  }, [onEdit]);
   const [pageCounts, setPageCounts] = useState([1, 1]);
   const [docs, setDocs] = useState<[string, string]>(["", ""]);
   const [active, setActive] = useState(0);
@@ -85,6 +185,8 @@ export function ResumePreview({
   }
 
   function onLoad(index: number) {
+    const d = frames[index].current?.contentDocument;
+    if (d?.body && onEdit) enableEditing(d, () => editRef.current);
     measure(index);
     // Les polices peuvent finir de charger après l'événement : on remesure alors.
     void frames[index].current?.contentDocument?.fonts?.ready.then(() => measure(index));
@@ -111,7 +213,7 @@ export function ResumePreview({
             ref={frames[i]}
             title={i === active ? label : `${label} (mise à jour)`}
             aria-hidden={i !== active}
-            tabIndex={-1}
+            tabIndex={onEdit && i === active ? 0 : -1}
             srcDoc={docs[i]}
             sandbox="allow-same-origin"
             onLoad={() => onLoad(i)}

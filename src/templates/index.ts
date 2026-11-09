@@ -3,6 +3,7 @@ import { galerie, ivoire, serif } from "./designs/elegant";
 import { bloc, colonne, dune, horizon } from "./designs/moderne";
 import { banniere, medaillon, portrait } from "./designs/photo";
 import { classique, epure, ligne, notaire } from "./designs/sobre";
+import { ardoise, cadran, carnet, mosaique, neon, nordique, opera, profil, rigueur, ruban, signature, vitrine } from "./designs/serie2";
 import { PAID_ENABLED } from "@/lib/site";
 import type { TemplateDef } from "./types";
 
@@ -13,20 +14,32 @@ const ALL: TemplateDef[] = [
   epure,
   notaire,
   ligne,
+  carnet,
+  rigueur,
   horizon,
   colonne,
   bloc,
   dune,
+  nordique,
+  cadran,
+  ardoise,
+  ruban,
   portrait,
   medaillon,
   banniere,
+  profil,
+  vitrine,
   serif,
   galerie,
   ivoire,
+  opera,
+  signature,
   atelier,
   pastel,
   geo,
   contraste,
+  neon,
+  mosaique,
 ];
 
 export const TEMPLATES: TemplateDef[] = PAID_ENABLED ? ALL : ALL.map((t) => ({ ...t, free: true }));
