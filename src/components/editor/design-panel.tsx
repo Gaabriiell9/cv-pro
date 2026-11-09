@@ -1,10 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import { PAID_ENABLED } from "@/lib/site";
 import { Check } from "lucide-react";
 import { useEditor } from "@/lib/editor/store";
 import { TEXT_SCALES, type CvLocale, type Theme } from "@/lib/resume/schema";
-import { TEMPLATES } from "@/templates";
+import { getTemplate, TEMPLATES } from "@/templates";
+import { FAMILY_LABELS, type TemplateFamily } from "@/templates/types";
+
+type Filter = TemplateFamily | "tous";
+const FAMILIES = Object.keys(FAMILY_LABELS) as TemplateFamily[];
 
 // Couleurs proposées : toutes assez foncées pour rester lisibles sur fond blanc.
 const ACCENTS = [
@@ -55,6 +60,13 @@ export function DesignPanel() {
   const locale = useEditor((s) => s.cvLocale);
   const { setTemplate, setTheme, setLocale } = useEditor.getState();
   const set = <K extends keyof Theme>(k: K) => (v: Theme[K]) => setTheme({ [k]: v } as Partial<Theme>);
+  // Catégorie affichée : au départ, celle du design du CV ouvert.
+  const [filter, setFilter] = useState<Filter>(() => getTemplate(templateId)?.family ?? "tous");
+  const shown = filter === "tous" ? TEMPLATES : TEMPLATES.filter((t) => t.family === filter);
+  const filters: { value: Filter; label: string; count: number }[] = [
+    ...FAMILIES.map((f) => ({ value: f, label: FAMILY_LABELS[f], count: TEMPLATES.filter((t) => t.family === f).length })),
+    { value: "tous", label: "Tous", count: TEMPLATES.length },
+  ];
 
   return (
     <div className="grid grid-cols-1 gap-3">
@@ -65,8 +77,27 @@ export function DesignPanel() {
         <p className="mb-3 text-xs text-ink-soft">
           Votre contenu est conservé quand vous changez de design.
         </p>
-        <div className="grid grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-3">
-          {TEMPLATES.map((t) => {
+        <div role="group" aria-label="Catégories de designs" className="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
+          {filters.map((f) => {
+            const on = filter === f.value;
+            return (
+              <button
+                key={f.value}
+                type="button"
+                aria-pressed={on}
+                onClick={() => setFilter(f.value)}
+                className={`inline-flex min-h-10 flex-none items-center gap-1.5 rounded-full border px-3.5 text-sm transition-colors ${
+                  on ? "border-accent bg-accent text-accent-ink font-semibold" : "border-line bg-white hover:border-ink-soft/50"
+                }`}
+              >
+                {f.label}
+                <span className={`text-xs ${on ? "text-accent-ink/80" : "text-ink-soft"}`}>{f.count}</span>
+              </button>
+            );
+          })}
+        </div>
+        <div key={filter} className="anim-fade grid grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-3">
+          {shown.map((t) => {
             const selected = templateId === t.id;
             return (
               <button
