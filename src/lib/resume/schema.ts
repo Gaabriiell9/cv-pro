@@ -82,6 +82,11 @@ export const themeSchema = z.object({
   // Taille du texte (1 = normale). Facultative : les CV enregistrés avant n'en ont pas.
   // 85 % au plus petit, pour rester lisible.
   scale: z.number().min(0.85).max(1).optional(),
+  // Ajustement automatique pour tenir sur une page (absent = activé).
+  autoFit: z.boolean().optional(),
+  // Vrai quand l'espacement ou la taille du texte ont été resserrés automatiquement :
+  // ils peuvent alors être desserrés si le CV raccourcit.
+  fitted: z.boolean().optional(),
 });
 
 /** Tailles de texte proposées (et essayées par « Tenir sur une page »). */

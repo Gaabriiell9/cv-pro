@@ -15,7 +15,7 @@ import { getTemplate } from "@/templates";
 // Chromium, qui fabrique le PDF) et passer à 2 pages. On garde donc une ligne de jeu.
 const SAFETY_PX = 16;
 
-async function countPages(request: RenderRequest): Promise<number> {
+export async function countPages(request: RenderRequest): Promise<number> {
   const template = getTemplate(request.templateId);
   if (!template) return 1;
   const frame = document.createElement("iframe");
@@ -39,6 +39,32 @@ async function countPages(request: RenderRequest): Promise<number> {
 }
 
 export type FitResult = { ok: true; theme: Theme } | { ok: false; pages: number };
+
+/** Réglages du plus aéré au plus serré, essayés par l'ajustement automatique. */
+export const FIT_LADDER: Pick<Theme, "density" | "scale">[] = [
+  { density: "normal", scale: 1 },
+  ...TEXT_SCALES.map((scale) => ({ density: "compact" as const, scale })),
+];
+
+/** Position d'un thème sur l'échelle (-1 : plus aéré que tout, « aéré » choisi à la main). */
+export function ladderIndex(theme: Theme): number {
+  if (theme.density === "aere") return -1;
+  const scale = theme.scale ?? 1;
+  return FIT_LADDER.findIndex((s) => s.density === theme.density && s.scale === scale);
+}
+
+/**
+ * Le CV a raccourci : renvoie le réglage le plus aéré (au plus « normal », 100 %) qui
+ * tient encore sur une page, ou null si rien de mieux que le réglage actuel.
+ */
+export async function loosen(request: RenderRequest): Promise<Theme | null> {
+  const current = ladderIndex(request.theme);
+  for (let i = 0; i < current; i++) {
+    const theme: Theme = { ...request.theme, ...FIT_LADDER[i] };
+    if ((await countPages({ ...request, theme })) === 1) return theme;
+  }
+  return null;
+}
 
 export async function fitOnePage(request: RenderRequest): Promise<FitResult> {
   const steps: Pick<Theme, "density" | "scale">[] = [];

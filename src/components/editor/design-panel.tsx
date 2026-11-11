@@ -170,7 +170,7 @@ export function DesignPanel() {
         <Choice
           legend="Espacement"
           value={theme.density}
-          onChange={set("density")}
+          onChange={(v) => setTheme({ density: v, fitted: false })}
           options={[
             { value: "compact", label: "Compact" },
             { value: "normal", label: "Normal" },
@@ -180,9 +180,23 @@ export function DesignPanel() {
         <Choice
           legend="Taille du texte"
           value={String(theme.scale ?? 1)}
-          onChange={(v) => setTheme({ scale: Number(v) })}
+          onChange={(v) => setTheme({ scale: Number(v), fitted: false })}
           options={TEXT_SCALES.map((sc) => ({ value: String(sc), label: sc === 1 ? "Normale" : `${Math.round(sc * 100)} %` }))}
         />
+        <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border border-line px-3.5 py-3 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent/40">
+          <input
+            type="checkbox"
+            className="mt-0.5 size-4 flex-none accent-[var(--color-accent)]"
+            checked={theme.autoFit !== false}
+            onChange={(e) => setTheme({ autoFit: e.target.checked })}
+          />
+          <span className="min-w-0 text-sm">
+            <span className="block font-medium">Tenir sur une page automatiquement</span>
+            <span className="block text-xs text-ink-soft">
+              Si le CV déborde, l&apos;espacement puis la taille du texte sont resserrés (jusqu&apos;à 85 %). Vous êtes prévenu s&apos;il déborde encore.
+            </span>
+          </span>
+        </label>
         <Choice
           legend="Forme de la photo"
           value={theme.photoShape}

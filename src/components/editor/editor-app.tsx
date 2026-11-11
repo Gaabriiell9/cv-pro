@@ -8,6 +8,8 @@ import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { type SyncStatus, useCloudSync } from "@/lib/editor/cloud";
 import { ResumePreview } from "@/components/resume-preview";
+import { Toaster } from "sonner";
+import { useAutoFit } from "@/lib/editor/auto-fit";
 import { useDebounced, useEditorHydration, useRenderRequest } from "@/lib/editor/hooks";
 import { useEditor } from "@/lib/editor/store";
 import { downloadResumePdf } from "@/lib/resume/download";
@@ -262,6 +264,7 @@ export function EditorApp() {
   // L'éditeur s'affiche une fois le CV du compte chargé (ou la copie locale si hors ligne).
   const ready = hydrated && uid !== null && sync !== "chargement";
   const [tab, setTab] = useState<Tab>("contenu");
+  useAutoFit(ready);
 
   // Filet de sécurité (le proxy protège déjà /editeur) : sans session, direction l'inscription.
   useEffect(() => {
@@ -301,6 +304,8 @@ export function EditorApp() {
 
   return (
     <div className="min-h-dvh pb-24 lg:pb-0">
+      {/* Notifications (ajustement sur une page, CV qui déborde) : au-dessus des onglets du téléphone. */}
+      <Toaster position="top-center" offset={76} mobileOffset={72} closeButton toastOptions={{ className: "cv-toast" }} />
       <header className="sticky top-0 z-30 border-b border-line bg-paper/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
           <Link href="/" aria-label="CV Pro, accueil" className="shrink-0">
