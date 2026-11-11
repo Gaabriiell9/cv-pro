@@ -15,8 +15,22 @@ export type InlineEdit = (field: string, line: number | null, value: string) => 
 // Styles d'édition, ajoutés seulement dans l'aperçu (jamais dans le PDF).
 const EDIT_CSS = `
 [data-f] { cursor: text; border-radius: 1.5px; }
-[data-f]:hover { background: rgba(31, 77, 58, 0.1); box-shadow: 0 0 0 1.5px rgba(31, 77, 58, 0.45); }
-[data-f][contenteditable] { background: #fff; color: #1d1d1b; box-shadow: 0 0 0 2px #1f4d3a; outline: none; cursor: text; }
+[data-f]:hover { background: rgba(127, 127, 127, 0.16); box-shadow: 0 0 0 1.5px rgba(127, 127, 127, 0.6); }
+/* En édition : encre foncée sur fond blanc, quel que soit le design (colonnes et bandeaux
+   foncés, texte en couleur ou en dégradé). !important : les règles des designs sont plus
+   précises que celle-ci. */
+[data-f][contenteditable], [data-f][contenteditable] * {
+  background: #fff !important;
+  color: #1d1d1b !important;
+  -webkit-text-fill-color: #1d1d1b !important;
+  text-shadow: none !important;
+}
+[data-f][contenteditable] { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #1f4d3a !important; outline: none; cursor: text; }
+[data-f][contenteditable]::selection, [data-f][contenteditable] *::selection {
+  background: #cfe3d8 !important;
+  color: #1d1d1b !important;
+  -webkit-text-fill-color: #1d1d1b !important;
+}
 `;
 
 /**
